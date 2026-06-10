@@ -1,0 +1,36 @@
+---
+title: "React useEffect"
+description: "Menggunakan useEffect untuk sinkronisasi dengan sistem di luar render."
+category: "react"
+slug: "use-effect"
+order: 2
+readingTime: "7 min"
+updatedAt: "2026-06-09"
+---
+
+# React useEffect
+
+`useEffect` dipakai untuk sinkronisasi, bukan untuk semua logic.
+
+## Contoh Fetch
+
+```tsx
+useEffect(() => {
+  async function loadData() {
+    const response = await fetch("/api/items")
+    setItems(await response.json())
+  }
+
+  loadData()
+}, [])
+```
+
+## Dependency
+
+Dependency menentukan kapan effect dijalankan ulang.
+
+## Hindari
+
+- Menaruh semua business logic di effect.
+- Mengabaikan dependency array.
+- Membuat effect yang saling memicu tanpa batas.

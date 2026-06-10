@@ -1,0 +1,55 @@
+---
+title: "JavaScript Introduction"
+description: "Kenalan dengan JavaScript sebagai bahasa utama untuk interaksi web."
+category: "javascript"
+slug: "introduction"
+order: 1
+readingTime: "4 min"
+updatedAt: "2026-06-09"
+---
+
+# JavaScript Introduction
+
+JavaScript dipakai untuk membuat halaman web menjadi interaktif.
+
+## Kapan JavaScript Dipakai
+
+JavaScript cocok untuk membaca input user, mengubah tampilan, memanggil API, dan mengatur logic kecil di browser.
+
+```js
+console.log("Hello from JavaScript")
+```
+
+## Contoh Program Kecil
+
+Kode ini bisa kamu salin untuk latihan pertama. Program menerima daftar harga, menghitung total, lalu menampilkan status diskon.
+
+```js
+const prices = [25000, 40000, 15000]
+
+function calculateTotal(items) {
+  return items.reduce((total, price) => total + price, 0)
+}
+
+const total = calculateTotal(prices)
+const hasDiscount = total >= 75000
+
+console.log(`Total belanja: Rp${total}`)
+console.log(hasDiscount ? "Dapat diskon" : "Belum dapat diskon")
+```
+
+## Coba Ubah
+
+- Tambahkan harga baru ke array `prices`.
+- Ubah batas diskon dari `75000` ke `100000`.
+- Buat function baru untuk menghitung pajak.
+
+## Cara Belajar
+
+- Pahami variable dan tipe data.
+- Latih function kecil setiap hari.
+- Biasakan membaca error message.
+
+## Next Step
+
+Setelah ini, pelajari cara menyimpan data dengan variable.

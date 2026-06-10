@@ -1,0 +1,31 @@
+---
+title: "Database Pagination"
+description: "Memahami offset dan cursor pagination untuk list data."
+category: "database"
+slug: "pagination"
+order: 2
+readingTime: "7 min"
+updatedAt: "2026-06-09"
+---
+
+# Database Pagination
+
+Pagination membagi list data menjadi halaman kecil.
+
+## Offset Pagination
+
+```sql
+select *
+from posts
+order by created_at desc
+limit 10 offset 20;
+```
+
+## Cursor Pagination
+
+Cursor pagination lebih stabil untuk data yang sering berubah.
+
+## Rule Praktis
+
+- Pakai offset untuk admin table kecil.
+- Pakai cursor untuk feed dan data besar.

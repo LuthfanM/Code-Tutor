@@ -1,0 +1,29 @@
+import { notFound } from "next/navigation";
+import { MDXContent } from "@/components/content/MDXContent";
+import { getLearningPath, getLearningPathParams } from "@/lib/paths";
+
+export function generateStaticParams() {
+  return getLearningPathParams();
+}
+
+export default async function PathDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  let learningPath;
+
+  try {
+    learningPath = getLearningPath(slug);
+  } catch {
+    notFound();
+  }
+
+  return (
+    <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
+      <p className="text-sm font-semibold text-leaf">{learningPath.meta.level}</p>
+      <h1 className="mt-3 text-4xl font-bold text-ink">{learningPath.meta.title}</h1>
+      <p className="mt-4 text-lg leading-8 text-slate-600">{learningPath.meta.description}</p>
+      <div className="mt-8 rounded-lg border border-line bg-white p-6 sm:p-8">
+        <MDXContent body={learningPath.body} />
+      </div>
+    </main>
+  );
+}

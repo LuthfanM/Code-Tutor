@@ -1,0 +1,35 @@
+---
+title: "Golang REST API with Gin"
+description: "Membuat endpoint REST sederhana menggunakan Gin."
+category: "golang"
+slug: "gin-rest-api"
+order: 1
+readingTime: "8 min"
+updatedAt: "2026-06-09"
+---
+
+# Golang REST API with Gin
+
+Gin adalah web framework ringan untuk membuat API di Go.
+
+## Setup Router
+
+```go
+router := gin.Default()
+
+router.GET("/health", func(c *gin.Context) {
+  c.JSON(200, gin.H{"status": "ok"})
+})
+
+router.Run(":8080")
+```
+
+## Struktur Endpoint
+
+Pisahkan handler, service, dan repository saat aplikasi mulai membesar.
+
+## Praktik Awal
+
+- Mulai dari endpoint kecil.
+- Validasi input request.
+- Kembalikan response JSON yang konsisten.

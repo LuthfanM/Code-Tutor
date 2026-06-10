@@ -1,0 +1,31 @@
+---
+title: "SQL Basic"
+description: "Dasar SELECT, INSERT, UPDATE, dan DELETE untuk bekerja dengan database."
+category: "database"
+slug: "sql-basic"
+order: 1
+readingTime: "6 min"
+updatedAt: "2026-06-09"
+---
+
+# SQL Basic
+
+SQL dipakai untuk membaca dan mengubah data di relational database.
+
+## SELECT
+
+```sql
+select id, name, email
+from users
+where active = true;
+```
+
+## INSERT
+
+Gunakan `insert` untuk menambah row baru.
+
+## Safety
+
+- Pakai `where` saat update dan delete.
+- Pilih kolom yang dibutuhkan saja.
+- Gunakan index untuk query yang sering dipakai.
