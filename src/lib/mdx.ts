@@ -15,6 +15,7 @@ export type ContentMeta = {
   updatedAt?: string;
   date?: string;
   level?: string;
+  tags?: string[];
 };
 
 export type ContentDoc = {

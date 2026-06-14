@@ -1,0 +1,147 @@
+---
+title: "Var vs Let di JavaScript"
+description: "Kenapa var dan let bisa memberi hasil berbeda, terutama saat dipakai dengan setTimeout di dalam loop."
+slug: "var-vs-let"
+date: "2026-06-13"
+readingTime: "6 min"
+tags:
+  - javascript
+  - fundamentals
+---
+
+# Var vs Let di JavaScript
+
+`var` dan `let` sama-sama dipakai untuk membuat variable. Bedanya ada di tempat variable itu hidup.
+
+## Function Scope
+
+`var` punya **function scope**.
+
+Artinya, kalau `var` dibuat di dalam function, variable itu hidup di seluruh function tersebut. Bukan hanya di dalam `{}` tempat dia ditulis.
+
+Contoh:
+
+```js
+function test() {
+  if (true) {
+    var name = "Budi";
+  }
+
+  console.log(name);
+}
+```
+
+Code di atas masih bisa membaca `name`, karena `var name` hidup di scope function `test`.
+
+## Block Scope
+
+`let` punya **block scope**.
+
+Block adalah area di dalam `{}` seperti `if`, `for`, atau function. Jadi kalau `let` dibuat di dalam block, dia hanya hidup di block itu.
+
+Contoh:
+
+```js
+function test() {
+  if (true) {
+    let name = "Budi";
+  }
+
+  console.log(name);
+}
+```
+
+Code ini error, karena `name` hanya hidup di dalam block `if`.
+
+## Case: var di dalam for dan setTimeout
+
+Sekarang lihat contoh ini:
+
+```js
+function test() {
+  for (var i = 0; i < 3; i++) {
+    setTimeout(() => console.log(i), 100);
+  }
+}
+```
+
+Banyak orang mengira output-nya:
+
+```txt
+0
+1
+2
+```
+
+Tapi output sebenarnya:
+
+```txt
+3
+3
+3
+```
+
+Kenapa?
+
+`setTimeout` tidak langsung menjalankan `console.log(i)`. Dia menunggu dulu sekitar 100 milidetik.
+
+Sementara itu, loop `for` tetap jalan sampai selesai:
+
+- saat pertama, `i` bernilai `0`
+- lalu `i` menjadi `1`
+- lalu `i` menjadi `2`
+- setelah itu `i` menjadi `3`, dan loop berhenti
+
+Ketika 100 milidetik lewat, semua `setTimeout` baru menjalankan `console.log(i)`.
+
+Masalahnya, karena `var` punya function scope, semua callback membaca variable `i` yang sama. Variable itu sudah berubah menjadi `3`.
+
+Secara mental, JavaScript memperlakukan `var i` seperti ini:
+
+```js
+function test() {
+  var i; // dibuat sekali di scope function
+
+  for (i = 0; i < 3; i++) {
+    setTimeout(() => console.log(i), 100);
+  }
+}
+```
+
+Jadi bukan ada tiga variable `i`. Yang ada hanya satu variable `i`, lalu nilainya berubah-ubah sampai akhirnya menjadi `3`.
+
+## Kalau pakai let
+
+Sekarang bandingkan dengan `let`:
+
+```js
+function test() {
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => console.log(i), 100);
+  }
+}
+```
+
+Output-nya:
+
+```txt
+0
+1
+2
+```
+
+Dengan `let`, JavaScript membuat `i` baru untuk setiap putaran loop. Jadi callback pertama mengingat `i` versi `0`, callback kedua mengingat `i` versi `1`, dan callback ketiga mengingat `i` versi `2`.
+
+Bayangkan seperti menulis angka di tiga kertas berbeda.
+
+Dengan `var`, semua orang melihat satu kertas yang sama. Di akhir loop, isi kertas itu adalah `3`.
+
+Dengan `let`, setiap callback mendapat kertasnya sendiri. Karena itu hasilnya bisa tetap `0`, `1`, dan `2`.
+
+## Ringkasnya
+
+`var` hidup di scope function, jadi satu variable bisa dipakai bersama oleh semua callback di dalam function itu.
+
+`let` hidup di scope block, dan di dalam `for`, setiap putaran mendapat versi `i` sendiri.
+
+Untuk code modern, biasanya lebih aman memakai `let` atau `const` daripada `var`.
