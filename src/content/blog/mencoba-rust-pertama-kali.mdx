@@ -1,0 +1,187 @@
+---
+title: "Mencoba Rust Pertama Kali"
+description: "Catatan awal saat mencoba Rust: dari setup, ownership, sampai menulis program kecil."
+slug: "mencoba-rust-pertama-kali"
+date: "2026-06-18"
+readingTime: "6 min"
+tags:
+  - rust
+  - backend
+  - beginner
+---
+
+# Mencoba Rust Pertama Kali
+
+Rust sering terdengar seperti bahasa yang sulit. Banyak istilah baru muncul sejak awal: ownership, borrowing, lifetime, compiler ketat, dan memory safety.
+
+Tapi untuk percobaan pertama, kamu tidak perlu langsung memahami semuanya. Target awalnya cukup sederhana: bisa menjalankan program Rust kecil, membaca error dari compiler, lalu mulai paham cara Rust menjaga data.
+
+## Setup Awal
+
+Cara paling umum untuk mulai memakai Rust adalah lewat `rustup`.
+
+Setelah Rust terpasang, cek versi dengan:
+
+```bash
+rustc --version
+cargo --version
+```
+
+`rustc` adalah compiler Rust. `cargo` adalah tool untuk membuat project, menjalankan code, mengelola dependency, dan menjalankan test.
+
+Untuk membuat project baru:
+
+```bash
+cargo new hello-rust
+cd hello-rust
+cargo run
+```
+
+Kalau semuanya berjalan, kamu akan melihat output:
+
+```txt
+Hello, world!
+```
+
+## Struktur Project
+
+Project Rust sederhana biasanya punya struktur seperti ini:
+
+```txt
+hello-rust/
+  Cargo.toml
+  src/
+    main.rs
+```
+
+`Cargo.toml` berisi metadata project dan daftar dependency. File `src/main.rs` berisi entry point program.
+
+Contoh isi `main.rs`:
+
+```rust
+fn main() {
+    println!("Hello, Rust!");
+}
+```
+
+Fungsi `main` adalah titik awal program. Macro `println!` dipakai untuk mencetak text ke terminal.
+
+## Variable dan Mutability
+
+Di Rust, variable secara default tidak bisa diubah.
+
+```rust
+fn main() {
+    let name = "Budi";
+    println!("{}", name);
+}
+```
+
+Kalau ingin nilainya bisa berubah, gunakan `mut`.
+
+```rust
+fn main() {
+    let mut count = 1;
+    count = count + 1;
+
+    println!("{}", count);
+}
+```
+
+Aturan ini terasa ketat di awal, tapi membantu membuat perubahan data lebih jelas. Saat membaca code, kamu bisa langsung tahu variable mana yang memang boleh berubah.
+
+## Ownership
+
+Bagian yang paling berbeda dari Rust adalah ownership.
+
+Setiap value di Rust punya owner. Ketika owner keluar dari scope, value itu dibersihkan dari memory.
+
+Contoh:
+
+```rust
+fn main() {
+    let message = String::from("belajar rust");
+    print_message(message);
+
+    // println!("{}", message); // error
+}
+
+fn print_message(text: String) {
+    println!("{}", text);
+}
+```
+
+Saat `message` dikirim ke `print_message`, ownership pindah ke parameter `text`. Setelah itu, `message` tidak bisa dipakai lagi di function `main`.
+
+Ini mungkin terasa aneh kalau kamu datang dari JavaScript, Go, PHP, atau Python. Tapi dari aturan inilah Rust bisa mengelola memory tanpa garbage collector.
+
+## Borrowing
+
+Kalau hanya ingin membaca value tanpa memindahkan ownership, gunakan reference.
+
+```rust
+fn main() {
+    let message = String::from("belajar rust");
+    print_message(&message);
+
+    println!("{}", message);
+}
+
+fn print_message(text: &String) {
+    println!("{}", text);
+}
+```
+
+Tanda `&` berarti kita meminjam value. Function `print_message` bisa membaca `message`, tapi ownership tetap ada di `main`.
+
+Untuk percobaan pertama, cukup ingat aturan sederhananya:
+
+- kirim value langsung kalau function boleh mengambil ownership
+- kirim reference dengan `&` kalau function hanya perlu membaca
+- gunakan `&mut` kalau function perlu mengubah value
+
+## Contoh Program Kecil
+
+Kita bisa membuat function sederhana untuk menghitung total harga.
+
+```rust
+fn main() {
+    let prices = vec![10000, 15000, 25000];
+    let total = calculate_total(&prices);
+
+    println!("Total: {}", total);
+}
+
+fn calculate_total(prices: &Vec<i32>) -> i32 {
+    let mut total = 0;
+
+    for price in prices {
+        total = total + price;
+    }
+
+    total
+}
+```
+
+`prices` dipinjam oleh `calculate_total`, jadi setelah function selesai, data masih bisa dipakai lagi di `main`.
+
+## Rust Untuk Backend
+
+Rust bisa dipakai untuk backend dengan framework seperti Axum, Actix Web, atau Rocket. Tapi sebelum masuk ke framework, lebih baik kuatkan dulu bagian dasar:
+
+- variable dan type
+- function
+- struct dan enum
+- error handling dengan `Result`
+- ownership dan borrowing
+- module dan package dengan Cargo
+
+Setelah itu, barulah mulai membuat HTTP handler, membaca request, mengirim response JSON, dan terhubung ke database.
+
+## Ringkasnya
+
+Rust memang lebih ketat dibanding banyak bahasa lain. Compiler sering menghentikan code yang terlihat biasa saja di awal.
+
+Namun, error dari compiler Rust biasanya cukup membantu. Kalau dibaca pelan-pelan, compiler sering memberi tahu bagian mana yang salah dan apa yang perlu diubah.
+
+Untuk percobaan pertama, jangan buru-buru masuk ke project besar. Buat CLI kecil, mainkan variable, tulis beberapa function, lalu biasakan diri dengan ownership dan borrowing.
