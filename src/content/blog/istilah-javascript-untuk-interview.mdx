@@ -1,0 +1,550 @@
+---
+title: "Istilah JavaScript yang Perlu Diketahui untuk Interview"
+description: "Ringkasan istilah JavaScript yang sering muncul saat interview, dari closure, hoisting, event loop, sampai prototype."
+slug: "istilah-javascript-untuk-interview"
+date: "2026-06-18"
+readingTime: "9 min"
+tags:
+  - javascript
+  - intermediate
+---
+
+# Istilah JavaScript yang Perlu Diketahui untuk Interview
+
+Interview JavaScript sering tidak hanya menanyakan apakah kamu bisa membuat feature. Banyak pertanyaan dibuat untuk melihat apakah kamu paham cara JavaScript bekerja di balik layar.
+
+Kamu tidak perlu menghafal semua istilah sebagai definisi kaku. Yang lebih penting adalah bisa menjelaskan dengan contoh kecil dan tahu kapan konsep itu muncul di code nyata.
+
+## Scope
+
+Scope adalah area tempat sebuah variable bisa diakses.
+
+JavaScript punya beberapa jenis scope:
+
+- global scope
+- function scope
+- block scope
+
+Contoh block scope:
+
+```js run
+if (true) {
+  let name = "Budi";
+}
+
+console.log(name); // ReferenceError
+```
+
+Variable `name` dibuat dengan `let` di dalam block `{}`, jadi hanya bisa dipakai di dalam block tersebut.
+
+Pertanyaan interview yang sering muncul:
+
+```js run=test
+function test() {
+  if (true) {
+    var count = 10;
+  }
+
+  console.log(count);
+}
+```
+
+Code ini masih bisa membaca `count`, karena `var` punya function scope, bukan block scope.
+
+## Hoisting
+
+Hoisting adalah perilaku ketika declaration seolah-olah dikenal JavaScript sebelum baris code dijalankan.
+
+Contoh dengan function declaration:
+
+```js run
+sayHello();
+
+function sayHello() {
+  console.log("Hello");
+}
+```
+
+Code ini berjalan, karena function declaration di-hoist.
+
+Tapi ini berbeda dengan variable:
+
+```js run
+console.log(name);
+var name = "Budi";
+```
+
+Output-nya adalah:
+
+```txt
+undefined
+```
+
+Declaration `var name` di-hoist, tapi assignment `"Budi"` tetap terjadi di baris aslinya.
+
+Dengan `let` dan `const`, hasilnya berbeda:
+
+```js run
+console.log(name);
+let name = "Budi";
+```
+
+Code ini error karena `name` sedang berada di temporal dead zone.
+
+## Temporal Dead Zone
+
+Temporal dead zone adalah fase ketika variable `let` atau `const` sudah dikenal oleh scope, tapi belum boleh diakses karena declaration-nya belum dieksekusi.
+
+Contoh:
+
+```js run
+{
+  console.log(total);
+  const total = 100;
+}
+```
+
+Variable `total` memang ada di block tersebut, tapi belum bisa dipakai sebelum baris `const total = 100`.
+
+Saat interview, temporal dead zone biasanya muncul bersama pertanyaan tentang perbedaan `var`, `let`, dan `const`.
+
+## Closure
+
+Closure terjadi ketika sebuah function masih bisa mengakses variable dari scope luar, walaupun scope luar itu sudah selesai dijalankan.
+
+Contoh:
+
+```js run
+function createCounter() {
+  let count = 0;
+
+  return function increment() {
+    count++;
+    return count;
+  };
+}
+
+const counter = createCounter();
+
+console.log(counter()); // 1
+console.log(counter()); // 2
+```
+
+Function `increment` tetap mengingat variable `count`. Itulah closure.
+
+Closure sering dipakai untuk:
+
+- menyimpan private state
+- membuat function factory
+- menjaga data tetap hidup di callback
+- membuat handler yang membawa context tertentu
+
+Contoh interview yang sering muncul:
+
+```js run
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 100);
+}
+```
+
+Output-nya:
+
+```txt
+3
+3
+3
+```
+
+Semua callback membaca variable `i` yang sama. Kalau memakai `let`, setiap putaran loop mendapat binding `i` sendiri.
+
+## Execution Context
+
+Execution context adalah lingkungan tempat JavaScript menjalankan code.
+
+Saat function dipanggil, JavaScript membuat execution context baru yang berisi informasi seperti:
+
+- variable lokal
+- parameter function
+- scope chain
+- nilai `this`
+
+Contoh:
+
+```js run
+const name = "Global";
+
+function greet() {
+  const message = "Hello";
+  console.log(message, name);
+}
+
+greet();
+```
+
+Saat `greet()` dipanggil, JavaScript membuat context untuk function tersebut. Kalau `name` tidak ditemukan di scope lokal, JavaScript mencarinya ke scope luar lewat scope chain.
+
+## Call Stack
+
+Call stack adalah struktur data yang dipakai JavaScript untuk melacak function yang sedang berjalan.
+
+Contoh:
+
+```js run
+function first() {
+  second();
+}
+
+function second() {
+  third();
+}
+
+function third() {
+  console.log("done");
+}
+
+first();
+```
+
+Urutannya:
+
+- `first` masuk stack
+- `second` masuk stack
+- `third` masuk stack
+- `third` selesai dan keluar
+- `second` selesai dan keluar
+- `first` selesai dan keluar
+
+Kalau function saling memanggil tanpa berhenti, stack bisa penuh dan menghasilkan error seperti `Maximum call stack size exceeded`.
+
+## Event Loop
+
+JavaScript menjalankan code utama di satu thread. Event loop membantu JavaScript menangani pekerjaan asynchronous seperti timer, network request, dan event dari browser.
+
+Contoh:
+
+```js run
+console.log("A");
+
+setTimeout(() => {
+  console.log("B");
+}, 0);
+
+console.log("C");
+```
+
+Output-nya:
+
+```txt
+A
+C
+B
+```
+
+Walaupun delay `setTimeout` adalah `0`, callback tetap menunggu call stack kosong dulu.
+
+## Microtask dan Macrotask
+
+Tidak semua callback asynchronous punya prioritas yang sama.
+
+Promise callback masuk ke microtask queue. `setTimeout` masuk ke macrotask queue.
+
+Contoh:
+
+```js run
+console.log("start");
+
+setTimeout(() => {
+  console.log("timeout");
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log("promise");
+});
+
+console.log("end");
+```
+
+Output-nya:
+
+```txt
+start
+end
+promise
+timeout
+```
+
+Setelah code synchronous selesai, JavaScript menjalankan microtask lebih dulu sebelum mengambil task berikutnya dari macrotask queue.
+
+## `this`
+
+`this` adalah nilai yang bergantung pada cara function dipanggil.
+
+Contoh method object:
+
+```js run
+const user = {
+  name: "Budi",
+  greet() {
+    console.log(this.name);
+  }
+};
+
+user.greet(); // Budi
+```
+
+Dalam contoh ini, `this` mengarah ke `user` karena function dipanggil sebagai method dari object tersebut.
+
+Tapi kalau method dipisahkan:
+
+```js run
+const greet = user.greet;
+greet();
+```
+
+Nilai `this` bisa hilang atau menjadi `undefined` di strict mode.
+
+Arrow function berbeda karena tidak punya `this` sendiri. Arrow function mengambil `this` dari scope luarnya.
+
+## Prototype
+
+JavaScript memakai prototype untuk inheritance.
+
+Setiap object bisa punya hubungan ke object lain sebagai prototype. Kalau sebuah property tidak ditemukan di object utama, JavaScript akan mencari ke prototype chain.
+
+Contoh:
+
+```js run
+const animal = {
+  eat() {
+    console.log("eating");
+  }
+};
+
+const cat = Object.create(animal);
+cat.name = "Milo";
+
+cat.eat(); // eating
+```
+
+Object `cat` tidak punya method `eat`, tapi JavaScript menemukannya di prototype `animal`.
+
+Class di JavaScript juga dibangun di atas prototype.
+
+```js run
+class User {
+  constructor(name) {
+    this.name = name;
+  }
+
+  greet() {
+    console.log(`Hello, ${this.name}`);
+  }
+}
+```
+
+Method `greet` disimpan di prototype, bukan dibuat ulang sebagai property baru untuk setiap instance.
+
+## Reference vs Primitive
+
+Primitive seperti string, number, boolean, null, undefined, bigint, dan symbol disimpan sebagai value.
+
+Object, array, dan function diperlakukan sebagai reference.
+
+Contoh:
+
+```js run
+const a = { count: 1 };
+const b = a;
+
+b.count = 2;
+
+console.log(a.count); // 2
+```
+
+`a` dan `b` mengarah ke object yang sama. Karena itu perubahan lewat `b` terlihat saat membaca `a`.
+
+Untuk array:
+
+```js run
+const numbers = [1, 2, 3];
+const copy = numbers;
+
+copy.push(4);
+
+console.log(numbers); // [1, 2, 3, 4]
+```
+
+Kalau ingin membuat copy baru, gunakan spread:
+
+```js run
+const copy = [...numbers];
+```
+
+## Equality
+
+JavaScript punya `==` dan `===`.
+
+`==` melakukan type coercion. `===` membandingkan tanpa type coercion.
+
+Contoh:
+
+```js run
+console.log(1 == "1");  // true
+console.log(1 === "1"); // false
+```
+
+Untuk code sehari-hari, biasanya lebih aman memakai `===` supaya hasil perbandingan lebih mudah diprediksi.
+
+Beberapa case yang sering ditanyakan:
+
+```js run
+console.log([] == false); // true
+console.log(null == undefined); // true
+console.log(NaN === NaN); // false
+```
+
+`NaN` tidak sama dengan dirinya sendiri. Untuk mengecek `NaN`, gunakan `Number.isNaN()`.
+
+## Type Coercion
+
+Type coercion adalah proses ketika JavaScript mengubah type secara otomatis.
+
+Contoh:
+
+```js run
+console.log("5" + 1); // "51"
+console.log("5" - 1); // 4
+```
+
+Operator `+` bisa berarti penjumlahan atau penggabungan string. Kalau salah satu operand adalah string, JavaScript cenderung melakukan string concatenation.
+
+Operator `-` tidak dipakai untuk string concatenation, jadi JavaScript mencoba mengubah `"5"` menjadi number.
+
+## Truthy dan Falsy
+
+Falsy adalah value yang dianggap `false` di kondisi.
+
+Value falsy di JavaScript:
+
+- `false`
+- `0`
+- `-0`
+- `0n`
+- `""`
+- `null`
+- `undefined`
+- `NaN`
+
+Selain itu, value biasanya truthy.
+
+Contoh:
+
+```js run
+if ("hello") {
+  console.log("jalan");
+}
+```
+
+String kosong `""` falsy, tapi string berisi text truthy.
+
+## Promise
+
+Promise adalah object yang mewakili hasil operasi asynchronous.
+
+Promise punya tiga state utama:
+
+- pending
+- fulfilled
+- rejected
+
+Contoh:
+
+```js run
+fetch("/api/users")
+  .then((response) => response.json())
+  .then((users) => {
+    console.log(users);
+  })
+  .catch((error) => {
+    console.error(error);
+  });
+```
+
+Di code modern, Promise sering ditulis dengan `async` dan `await`.
+
+```js run
+async function getUsers() {
+  try {
+    const response = await fetch("/api/users");
+    const users = await response.json();
+
+    return users;
+  } catch (error) {
+    console.error(error);
+  }
+}
+```
+
+`async` membuat function mengembalikan Promise. `await` membuat code terlihat synchronous, tapi tetap berjalan sebagai operasi asynchronous.
+
+## Debounce dan Throttle
+
+Debounce dan throttle sering muncul di frontend interview.
+
+Debounce menunda eksekusi sampai event berhenti terjadi dalam durasi tertentu. Ini cocok untuk search input.
+
+Throttle membatasi eksekusi agar hanya berjalan maksimal sekali dalam interval tertentu. Ini cocok untuk scroll atau resize event.
+
+Contoh debounce sederhana:
+
+```js run
+function debounce(fn, delay) {
+  let timer;
+
+  return function (...args) {
+    clearTimeout(timer);
+
+    timer = setTimeout(() => {
+      fn(...args);
+    }, delay);
+  };
+}
+```
+
+Function di atas memakai closure untuk menyimpan `timer`.
+
+## Immutability
+
+Immutability berarti data tidak diubah langsung, tapi dibuat versi barunya.
+
+Contoh mutasi:
+
+```js run
+const user = { name: "Budi", age: 20 };
+user.age = 21;
+```
+
+Contoh immutable update:
+
+```js run
+const user = { name: "Budi", age: 20 };
+const updatedUser = { ...user, age: 21 };
+```
+
+Konsep ini penting di React, Redux, dan banyak state management lain karena perubahan data perlu mudah dideteksi.
+
+## Ringkasnya
+
+Kalau sedang persiapan interview JavaScript, prioritaskan konsep yang sering menjadi akar banyak pertanyaan:
+
+- scope
+- hoisting
+- closure
+- event loop
+- `this`
+- prototype
+- reference vs primitive
+- promise dan async/await
+- type coercion
+
+Jangan hanya hafal definisi. Latih diri untuk menjelaskan output dari potongan code pendek, karena interview JavaScript sering bergerak dari pertanyaan sederhana ke detail yang lebih dalam.

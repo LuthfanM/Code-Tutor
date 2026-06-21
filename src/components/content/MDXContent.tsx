@@ -26,6 +26,19 @@ export function MDXContent({ body }: { body: string }) {
   let code: string[] = [];
   let inCode = false;
   let codeLang = "";
+  let codeRunnable = false;
+  let codeRunAfter = "";
+
+  function parseCodeFence(value: string) {
+    const [language = "", ...meta] = value.trim().split(/\s+/);
+    const runMeta = meta.find((item) => item === "run" || item.startsWith("run="));
+
+    return {
+      language,
+      runnable: Boolean(runMeta),
+      runAfter: runMeta?.startsWith("run=") ? runMeta.replace("run=", "") : ""
+    };
+  }
 
   function flushList(key: string) {
     if (!list.length) return;
@@ -50,15 +63,22 @@ export function MDXContent({ body }: { body: string }) {
             key={`code-${index}`}
             code={codeText}
             language={codeLang}
+            runnable={codeRunnable}
+            runAfter={codeRunAfter}
           />
         );
         code = [];
         codeLang = "";
+        codeRunnable = false;
+        codeRunAfter = "";
         inCode = false;
       } else {
         flushList(`list-${index}`);
         inCode = true;
-        codeLang = line.replace("```", "").trim();
+        const fence = parseCodeFence(line.replace("```", ""));
+        codeLang = fence.language;
+        codeRunnable = fence.runnable;
+        codeRunAfter = fence.runAfter;
       }
       return;
     }

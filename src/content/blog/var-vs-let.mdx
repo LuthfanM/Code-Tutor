@@ -22,7 +22,7 @@ Artinya, kalau `var` dibuat di dalam function, variable itu hidup di seluruh fun
 
 Contoh:
 
-```js
+```js run=test
 function test() {
   if (true) {
     var name = "Budi";
@@ -42,7 +42,7 @@ Block adalah area di dalam `{}` seperti `if`, `for`, atau function. Jadi kalau `
 
 Contoh:
 
-```js
+```js run=test
 function test() {
   if (true) {
     let name = "Budi";
@@ -58,7 +58,7 @@ Code ini error, karena `name` hanya hidup di dalam block `if`.
 
 Sekarang lihat contoh ini:
 
-```js
+```js run=test
 function test() {
   for (var i = 0; i < 3; i++) {
     setTimeout(() => console.log(i), 100);
@@ -99,7 +99,7 @@ Masalahnya, karena `var` punya function scope, semua callback membaca variable `
 
 Secara mental, JavaScript memperlakukan `var i` seperti ini:
 
-```js
+```js run=test
 function test() {
   var i; // dibuat sekali di scope function
 
@@ -115,7 +115,7 @@ Jadi bukan ada tiga variable `i`. Yang ada hanya satu variable `i`, lalu nilainy
 
 Sekarang bandingkan dengan `let`:
 
-```js
+```js run=test
 function test() {
   for (let i = 0; i < 3; i++) {
     setTimeout(() => console.log(i), 100);
