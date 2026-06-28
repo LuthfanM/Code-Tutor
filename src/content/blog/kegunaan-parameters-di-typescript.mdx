@@ -1,0 +1,251 @@
+---
+title: "Kegunaan Parameters di TypeScript"
+description: "Mengenal utility type Parameters di TypeScript untuk mengambil tipe parameter dari sebuah function."
+slug: "kegunaan-parameters-di-typescript"
+date: "2026-06-28"
+readingTime: "7 min"
+tags:
+  - typescript
+  - fundamentals
+  - utility-type
+---
+
+# Kegunaan Parameters di TypeScript
+
+`Parameters` adalah utility type bawaan TypeScript yang dipakai untuk mengambil tipe parameter dari sebuah function.
+
+Kalau kamu punya function, lalu ingin membuat type baru berdasarkan argument yang diterima function itu, `Parameters` bisa membantu tanpa perlu menulis ulang type secara manual.
+
+## Masalah yang Sering Muncul
+
+Misalnya kita punya function seperti ini:
+
+```ts
+function createUser(name: string, age: number, isAdmin: boolean) {
+  return {
+    name,
+    age,
+    isAdmin,
+  };
+}
+```
+
+Kalau kita ingin membuat type untuk parameter function tersebut, cara manualnya seperti ini:
+
+```ts
+type CreateUserArgs = [string, number, boolean];
+```
+
+Masalahnya, type ini bisa mudah tidak sinkron.
+
+Misalnya suatu hari `createUser` berubah:
+
+```ts
+function createUser(name: string, age: number, role: "user" | "admin") {
+  return {
+    name,
+    age,
+    role,
+  };
+}
+```
+
+Kalau `CreateUserArgs` masih `[string, number, boolean]`, berarti type kita sudah salah. Di sinilah `Parameters` berguna.
+
+## Menggunakan Parameters
+
+Dengan `Parameters`, kita bisa mengambil tipe parameter langsung dari function:
+
+```ts
+function createUser(name: string, age: number, role: "user" | "admin") {
+  return {
+    name,
+    age,
+    role,
+  };
+}
+
+type CreateUserArgs = Parameters<typeof createUser>;
+```
+
+Hasil dari `CreateUserArgs` adalah:
+
+```ts
+type CreateUserArgs = [name: string, age: number, role: "user" | "admin"];
+```
+
+Perhatikan bahwa hasilnya berbentuk tuple, bukan object.
+
+Artinya, TypeScript menyimpan tipe parameter sesuai urutan argument function.
+
+## Contoh Penggunaan Sederhana
+
+Karena hasil `Parameters` adalah tuple, kita bisa memakainya untuk membuat wrapper function.
+
+```ts
+function sum(a: number, b: number) {
+  return a + b;
+}
+
+type SumArgs = Parameters<typeof sum>;
+
+function logAndSum(...args: SumArgs) {
+  console.log("args:", args);
+  return sum(...args);
+}
+
+logAndSum(10, 20);
+```
+
+Di sini `SumArgs` sama dengan `[a: number, b: number]`.
+
+Jadi `logAndSum` otomatis punya parameter yang sama dengan `sum`.
+
+Kalau `sum` berubah, type `logAndSum` ikut menyesuaikan.
+
+## Mengambil Satu Parameter Saja
+
+Karena hasil `Parameters` adalah tuple, kita bisa mengambil salah satu parameter dengan index.
+
+Contoh:
+
+```ts
+function updateProfile(userId: string, data: { name?: string; bio?: string }) {
+  return {
+    userId,
+    data,
+  };
+}
+
+type UserId = Parameters<typeof updateProfile>[0];
+type ProfileData = Parameters<typeof updateProfile>[1];
+```
+
+Hasilnya:
+
+```ts
+type UserId = string;
+type ProfileData = {
+  name?: string;
+  bio?: string;
+};
+```
+
+Ini berguna saat kita butuh mengambil type dari salah satu argument function, tanpa membuat type baru secara terpisah.
+
+## Contoh yang Lebih Realistis
+
+Misalnya kita punya function untuk mengambil data dari API:
+
+```ts
+async function fetchPost(slug: string, options?: { preview?: boolean }) {
+  const url = options?.preview
+    ? `/api/posts/${slug}?preview=true`
+    : `/api/posts/${slug}`;
+
+  const response = await fetch(url);
+  return response.json();
+}
+```
+
+Lalu kita ingin membuat function lain yang menerima argument yang sama:
+
+```ts
+type FetchPostArgs = Parameters<typeof fetchPost>;
+
+async function fetchPostWithLog(...args: FetchPostArgs) {
+  console.log("fetching post:", args[0]);
+  return fetchPost(...args);
+}
+```
+
+Sekarang `fetchPostWithLog` mengikuti bentuk parameter `fetchPost`.
+
+Kalau nanti `fetchPost` menambah parameter baru, TypeScript akan membantu memberi tahu bagian mana yang perlu disesuaikan.
+
+## Parameters dengan Function Type
+
+`Parameters` tidak hanya bisa dipakai pada function declaration. Kita juga bisa memakainya pada function type.
+
+```ts
+type SendEmail = (to: string, subject: string, body: string) => Promise<void>;
+
+type SendEmailArgs = Parameters<SendEmail>;
+```
+
+Hasilnya:
+
+```ts
+type SendEmailArgs = [to: string, subject: string, body: string];
+```
+
+Ini sering berguna kalau codebase sudah punya type untuk handler, callback, atau service function.
+
+## Parameters dengan Callback
+
+Contoh lain, misalnya kita punya type untuk event handler:
+
+```ts
+type OnSubmit = (payload: { email: string; password: string }) => void;
+
+type SubmitPayload = Parameters<OnSubmit>[0];
+
+const payload: SubmitPayload = {
+  email: "budi@example.com",
+  password: "secret",
+};
+```
+
+Dengan cara ini, `SubmitPayload` selalu mengikuti parameter pertama dari `OnSubmit`.
+
+Kalau bentuk payload berubah, type `SubmitPayload` ikut berubah.
+
+## Kapan Sebaiknya Dipakai?
+
+Gunakan `Parameters` saat:
+
+- ingin membuat wrapper function
+- ingin mengambil type argument dari function yang sudah ada
+- ingin menghindari duplikasi type
+- ingin menjaga type tetap sinkron ketika function berubah
+- ingin membuat helper yang menerima argument sama dengan function lain
+
+Tapi jangan memakainya untuk semua hal.
+
+Kalau sebuah type penting untuk domain aplikasi, kadang lebih jelas membuat type eksplisit.
+
+Contoh:
+
+```ts
+type CreateUserInput = {
+  name: string;
+  age: number;
+  role: "user" | "admin";
+};
+
+function createUser(input: CreateUserInput) {
+  return input;
+}
+```
+
+Untuk data utama seperti user, product, order, atau payload API, type eksplisit seperti `CreateUserInput` sering lebih mudah dibaca dan dipakai ulang.
+
+## Ringkasnya
+
+`Parameters<T>` mengambil tipe parameter dari function `T`.
+
+Hasilnya adalah tuple, misalnya:
+
+```ts
+type Args = Parameters<(name: string, age: number) => void>;
+```
+
+Hasilnya:
+
+```ts
+type Args = [name: string, age: number];
+```
+
+Utility type ini berguna untuk menghindari duplikasi type, terutama saat membuat wrapper function atau helper yang mengikuti parameter function lain.
+
+Kalau type tersebut adalah bagian penting dari domain aplikasi, tetap pertimbangkan membuat type eksplisit agar code lebih mudah dibaca.
