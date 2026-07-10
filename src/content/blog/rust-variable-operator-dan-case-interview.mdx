@@ -1,0 +1,622 @@
+---
+title: "Rust: Variable, Operator, dan Case Interview yang Sering Bikin Bingung"
+description: "Catatan belajar Rust tentang variable, mutability, shadowing, operator, serta contoh case aneh yang sering muncul saat interview."
+slug: "rust-variable-operator-dan-case-interview"
+date: "2026-07-10"
+readingTime: "10 min"
+tags:
+  - rust
+  - beginner
+  - interview
+---
+
+# Rust: Variable, Operator, dan Case Interview yang Sering Bikin Bingung
+
+Kalau baru belajar Rust, bagian variable dan operator terlihat sederhana. Ada `let`, ada `mut`, ada `+`, `-`, `*`, `/`, dan sejenisnya.
+
+Tapi saat interview, pertanyaannya sering tidak berhenti di syntax dasar. Biasanya interviewer ingin tahu apakah kamu paham aturan Rust tentang immutability, ownership, shadowing, type inference, integer overflow, dan perbedaan antara value yang disalin dengan value yang dipindahkan.
+
+Artikel ini fokus ke dasar yang sering muncul: variable, operator, lalu beberapa case yang kelihatannya aneh.
+
+## Variable Default-nya Immutable
+
+Di Rust, variable tidak bisa diubah secara default.
+
+```rust
+fn main() {
+    let score = 10;
+    score = 20;
+
+    println!("{}", score);
+}
+```
+
+Code ini error karena `score` tidak dibuat sebagai mutable variable.
+
+Kalau memang nilainya perlu berubah, gunakan `mut`.
+
+```rust
+fn main() {
+    let mut score = 10;
+    score = 20;
+
+    println!("{}", score);
+}
+```
+
+Aturan ini membuat perubahan data lebih eksplisit. Saat membaca code Rust, variable yang tidak memakai `mut` bisa dianggap stabil di scope tersebut.
+
+## `mut` Mengubah Binding, Bukan Type
+
+`mut` membuat binding variable bisa diarahkan ke value baru. `mut` bukan bagian dari type data.
+
+```rust
+fn main() {
+    let mut age = 20;
+    age = 21;
+
+    println!("{}", age);
+}
+```
+
+`age` tetap bertipe integer. Yang berubah adalah binding `age` boleh menerima assignment baru.
+
+Tapi `mut` tidak berarti kamu bebas mengubah type variable yang sama.
+
+```rust
+fn main() {
+    let mut value = 10;
+    value = "sepuluh";
+}
+```
+
+Code ini error karena `value` sudah dianggap sebagai integer. Assignment berikutnya harus tetap cocok dengan type tersebut.
+
+## Shadowing
+
+Rust punya konsep shadowing. Kamu boleh membuat variable baru dengan nama yang sama.
+
+```rust
+fn main() {
+    let value = 10;
+    let value = value + 5;
+
+    println!("{}", value);
+}
+```
+
+Ini bukan assignment ulang. Baris kedua membuat binding baru bernama `value` yang menutupi binding sebelumnya.
+
+Karena shadowing membuat variable baru, type-nya boleh berubah.
+
+```rust
+fn main() {
+    let input = "42";
+    let input = input.parse::<i32>().unwrap();
+
+    println!("{}", input + 8);
+}
+```
+
+Di awal, `input` adalah `&str`. Setelah shadowing, `input` menjadi `i32`.
+
+Ini sering dipakai di Rust karena membuat nama variable tetap relevan tanpa harus membuat nama seperti `input_text`, `input_number`, atau `parsed_input`.
+
+## Constant Berbeda dari Variable Immutable
+
+Variable immutable dibuat dengan `let`. Constant dibuat dengan `const`.
+
+```rust
+const MAX_RETRY: u8 = 3;
+
+fn main() {
+    println!("{}", MAX_RETRY);
+}
+```
+
+Perbedaan penting:
+
+- `const` wajib punya type annotation
+- `const` harus diisi dengan nilai yang bisa dihitung saat compile time
+- `const` bisa dipakai di scope global
+- `let` dipakai untuk binding biasa di runtime
+
+Contoh yang tidak boleh:
+
+```rust
+fn main() {
+    let value = 10;
+    const TOTAL: i32 = value + 5;
+}
+```
+
+`TOTAL` tidak boleh bergantung pada variable runtime seperti `value`.
+
+## Type Inference
+
+Rust bisa menebak type dari context.
+
+```rust
+fn main() {
+    let price = 10000;
+    let quantity = 3;
+    let total = price * quantity;
+
+    println!("{}", total);
+}
+```
+
+Tapi kadang Rust butuh bantuan.
+
+```rust
+fn main() {
+    let number = "42".parse().unwrap();
+    println!("{}", number);
+}
+```
+
+Code ini bisa error karena Rust belum tahu hasil `parse()` harus menjadi type apa.
+
+Berikan type annotation:
+
+```rust
+fn main() {
+    let number: i32 = "42".parse().unwrap();
+    println!("{}", number);
+}
+```
+
+Atau gunakan turbofish syntax:
+
+```rust
+fn main() {
+    let number = "42".parse::<i32>().unwrap();
+    println!("{}", number);
+}
+```
+
+## Operator Aritmatika
+
+Operator dasar di Rust mirip bahasa lain.
+
+```rust
+fn main() {
+    let a = 10;
+    let b = 3;
+
+    println!("{}", a + b);
+    println!("{}", a - b);
+    println!("{}", a * b);
+    println!("{}", a / b);
+    println!("{}", a % b);
+}
+```
+
+Untuk integer, pembagian memakai hasil integer.
+
+```rust
+fn main() {
+    let result = 10 / 3;
+    println!("{}", result);
+}
+```
+
+Output-nya:
+
+```txt
+3
+```
+
+Kalau ingin hasil pecahan, gunakan floating point.
+
+```rust
+fn main() {
+    let result = 10.0 / 3.0;
+    println!("{}", result);
+}
+```
+
+## Operator Perbandingan
+
+Operator perbandingan menghasilkan boolean.
+
+```rust
+fn main() {
+    let age = 20;
+
+    println!("{}", age == 20);
+    println!("{}", age != 18);
+    println!("{}", age > 17);
+    println!("{}", age <= 20);
+}
+```
+
+Perbandingan hanya bisa dilakukan jika type-nya cocok atau memang didukung oleh type tersebut.
+
+```rust
+fn main() {
+    let a = 10;
+    let b = "10";
+
+    println!("{}", a == b);
+}
+```
+
+Code ini error karena integer tidak bisa langsung dibandingkan dengan string.
+
+## Operator Logika
+
+Operator logika dipakai untuk boolean.
+
+```rust
+fn main() {
+    let is_logged_in = true;
+    let is_admin = false;
+
+    println!("{}", is_logged_in && is_admin);
+    println!("{}", is_logged_in || is_admin);
+    println!("{}", !is_admin);
+}
+```
+
+`&&` berarti dua kondisi harus benar. `||` berarti salah satu kondisi cukup benar. `!` membalik nilai boolean.
+
+Rust memakai short-circuit evaluation.
+
+```rust
+fn main() {
+    let value = 0;
+
+    if value != 0 && 10 / value > 1 {
+        println!("valid");
+    }
+}
+```
+
+Bagian `10 / value` tidak dijalankan karena `value != 0` sudah `false`.
+
+## Operator Assignment
+
+Untuk mengubah nilai variable mutable, Rust mendukung assignment singkat.
+
+```rust
+fn main() {
+    let mut total = 10;
+
+    total += 5;
+    total -= 2;
+    total *= 3;
+    total /= 2;
+    total %= 4;
+
+    println!("{}", total);
+}
+```
+
+Operator seperti `+=` tetap butuh variable yang mutable.
+
+```rust
+fn main() {
+    let total = 10;
+    total += 5;
+}
+```
+
+Code ini error karena `total` tidak memakai `mut`.
+
+## Case Interview 1: Kenapa Ini Error?
+
+```rust
+fn main() {
+    let name = String::from("Rust");
+    let other = name;
+
+    println!("{}", name);
+    println!("{}", other);
+}
+```
+
+Ini error karena `String` tidak otomatis dicopy. Saat `name` diberikan ke `other`, ownership berpindah. Setelah itu, `name` tidak bisa dipakai lagi.
+
+Versi yang bisa jalan:
+
+```rust
+fn main() {
+    let name = String::from("Rust");
+    let other = name.clone();
+
+    println!("{}", name);
+    println!("{}", other);
+}
+```
+
+Atau pakai reference kalau hanya ingin membaca.
+
+```rust
+fn main() {
+    let name = String::from("Rust");
+    let other = &name;
+
+    println!("{}", name);
+    println!("{}", other);
+}
+```
+
+## Case Interview 2: Kenapa Integer Bisa Dicopy?
+
+```rust
+fn main() {
+    let a = 10;
+    let b = a;
+
+    println!("{}", a);
+    println!("{}", b);
+}
+```
+
+Code ini jalan karena integer punya trait `Copy`. Value sederhana seperti integer, boolean, char, dan beberapa tuple bisa dicopy murah.
+
+Tapi `String` tidak `Copy` karena datanya ada di heap. Kalau `String` dicopy diam-diam, biaya dan ownership memory-nya jadi tidak jelas.
+
+## Case Interview 3: Shadowing atau Mutation?
+
+```rust
+fn main() {
+    let count = 1;
+    let count = count + 1;
+    let count = count * 2;
+
+    println!("{}", count);
+}
+```
+
+Output-nya:
+
+```txt
+4
+```
+
+Ini bukan mutation. Ini shadowing tiga kali.
+
+Bandingkan dengan ini:
+
+```rust
+fn main() {
+    let mut count = 1;
+    count = count + 1;
+    count = count * 2;
+
+    println!("{}", count);
+}
+```
+
+Output-nya sama, tapi mekanismenya berbeda. Versi pertama membuat binding baru setiap kali. Versi kedua mengubah binding mutable yang sama.
+
+## Case Interview 4: Kenapa Type Bisa Berubah di Sini?
+
+```rust
+fn main() {
+    let value = "100";
+    let value = value.len();
+
+    println!("{}", value);
+}
+```
+
+Ini valid karena baris kedua adalah shadowing. `value` pertama bertipe `&str`, lalu `value` kedua bertipe `usize`.
+
+Kalau memakai `mut`, ini tidak boleh:
+
+```rust
+fn main() {
+    let mut value = "100";
+    value = value.len();
+}
+```
+
+`mut` memperbolehkan assignment ulang, tapi type-nya harus tetap sama.
+
+## Case Interview 5: Integer Overflow
+
+```rust
+fn main() {
+    let mut number: u8 = 255;
+    number += 1;
+
+    println!("{}", number);
+}
+```
+
+`u8` hanya bisa menyimpan angka dari `0` sampai `255`.
+
+Di debug build, overflow seperti ini biasanya membuat program panic. Di release build, operasi integer bisa wrap around, sehingga `255 + 1` menjadi `0`.
+
+Kalau ingin perilaku eksplisit, Rust menyediakan method seperti:
+
+```rust
+fn main() {
+    let number: u8 = 255;
+
+    println!("{:?}", number.checked_add(1));
+    println!("{}", number.wrapping_add(1));
+    println!("{}", number.saturating_add(1));
+}
+```
+
+Hasilnya:
+
+```txt
+None
+0
+255
+```
+
+Penjelasannya:
+
+- `checked_add` mengembalikan `None` jika overflow
+- `wrapping_add` berputar dari nilai maksimum ke minimum
+- `saturating_add` berhenti di nilai maksimum
+
+## Case Interview 6: Pembagian Integer
+
+```rust
+fn main() {
+    let result = 5 / 2;
+    println!("{}", result);
+}
+```
+
+Output-nya:
+
+```txt
+2
+```
+
+Rust tidak otomatis mengubah integer menjadi float. Kalau kedua operand adalah integer, hasilnya integer.
+
+Gunakan float jika butuh pecahan.
+
+```rust
+fn main() {
+    let result = 5.0 / 2.0;
+    println!("{}", result);
+}
+```
+
+## Case Interview 7: Remainder dengan Angka Negatif
+
+```rust
+fn main() {
+    println!("{}", -5 % 2);
+    println!("{}", 5 % -2);
+}
+```
+
+Output-nya:
+
+```txt
+-1
+1
+```
+
+Di Rust, hasil `%` mengikuti tanda operand kiri. Ini sering mengejutkan kalau sebelumnya kamu mengira remainder selalu positif.
+
+## Case Interview 8: Boolean Tidak Bisa Dijumlahkan
+
+```rust
+fn main() {
+    let is_active = true;
+    let result = is_active + 1;
+
+    println!("{}", result);
+}
+```
+
+Code ini error. Rust tidak menganggap `true` sebagai `1` dan `false` sebagai `0`.
+
+Kalau butuh konversi, lakukan secara eksplisit.
+
+```rust
+fn main() {
+    let is_active = true;
+    let result = if is_active { 1 } else { 0 };
+
+    println!("{}", result + 1);
+}
+```
+
+## Case Interview 9: `=` dan `==`
+
+```rust
+fn main() {
+    let mut count = 1;
+
+    if count = 2 {
+        println!("dua");
+    }
+}
+```
+
+Code ini error. Rust tidak mengizinkan assignment dipakai sebagai kondisi `if`.
+
+Gunakan `==` untuk perbandingan:
+
+```rust
+fn main() {
+    let count = 1;
+
+    if count == 2 {
+        println!("dua");
+    }
+}
+```
+
+Di Rust, kondisi `if` harus bertipe `bool`.
+
+## Case Interview 10: Borrow Mutable dan Immutable
+
+```rust
+fn main() {
+    let mut name = String::from("Rust");
+
+    let a = &name;
+    let b = &mut name;
+
+    println!("{}", a);
+    println!("{}", b);
+}
+```
+
+Code ini error karena Rust tidak membolehkan mutable borrow saat immutable borrow masih dipakai.
+
+Versi yang valid:
+
+```rust
+fn main() {
+    let mut name = String::from("Rust");
+
+    let a = &name;
+    println!("{}", a);
+
+    let b = &mut name;
+    b.push_str(" language");
+
+    println!("{}", b);
+}
+```
+
+Aturannya sederhana:
+
+- boleh punya banyak immutable reference
+- boleh punya satu mutable reference
+- tidak boleh menggabungkan mutable reference dan immutable reference yang masih aktif
+
+## Cara Menjawab Saat Interview
+
+Kalau ditanya case aneh di atas, jangan hanya jawab "karena Rust strict". Jawaban yang lebih kuat biasanya menyebut konsepnya.
+
+Contoh:
+
+- "Ini error karena ownership `String` pindah dari `name` ke `other`."
+- "Ini jalan karena integer punya trait `Copy`."
+- "Ini bukan mutation, tapi shadowing."
+- "Pembagian integer tetap menghasilkan integer."
+- "Overflow sebaiknya dibuat eksplisit dengan `checked_add`, `wrapping_add`, atau `saturating_add`."
+- "Rust mencegah mutable borrow saat immutable borrow masih aktif."
+
+## Ringkasnya
+
+Variable dan operator di Rust memang terlihat seperti materi awal, tapi banyak aturan penting tersembunyi di sana.
+
+Hal yang perlu diingat:
+
+- variable default-nya immutable
+- gunakan `mut` hanya saat binding memang perlu berubah
+- shadowing membuat binding baru dan boleh mengubah type
+- operator bekerja ketat sesuai type
+- integer division tidak otomatis menjadi float
+- overflow perlu dipahami, terutama saat memakai type kecil seperti `u8`
+- value sederhana seperti integer biasanya `Copy`, sedangkan `String` berpindah ownership
+- borrow checker menjaga agar reference tidak saling bertabrakan
+
+Kalau sudah nyaman dengan case-case kecil ini, kamu akan lebih siap masuk ke topik Rust yang lebih besar seperti ownership, borrowing, struct, enum, `Result`, dan lifetime.
