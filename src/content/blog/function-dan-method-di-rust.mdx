@@ -1,0 +1,528 @@
+---
+title: "Function dan Method di Rust: Deklarasi, Pemanggilan, dan Return Type"
+description: "Belajar perbedaan function dan method di Rust, cara deklarasi, cara pemanggilan, return type, serta perbedaannya dengan JavaScript, Go, Python, dan Java."
+slug: "function-dan-method-di-rust"
+date: "2026-07-12"
+readingTime: "9 min"
+tags:
+  - rust
+  - beginner
+  - backend
+---
+
+# Function dan Method di Rust: Deklarasi, Pemanggilan, dan Return Type
+
+Saat belajar Rust, `function` dan `method` sering terlihat mirip karena sama-sama berisi blok code yang bisa dipanggil berkali-kali.
+
+Bedanya, function berdiri sendiri. Method selalu terhubung ke sebuah type, misalnya `struct`, `enum`, atau type lain yang diberi implementasi lewat `impl`.
+
+Artikel ini membahas dasar function dan method di Rust: cara deklarasi, cara memanggil, return type, serta perbedaannya dengan bahasa lain seperti JavaScript, Go, Python, dan Java.
+
+## Function di Rust
+
+Function di Rust dibuat dengan keyword `fn`.
+
+```rust
+fn greet() {
+    println!("Halo, Rust!");
+}
+
+fn main() {
+    greet();
+}
+```
+
+Function `greet` tidak menerima parameter dan tidak mengembalikan value. Function itu hanya menjalankan `println!`.
+
+Cara memanggil function biasa:
+
+```rust
+nama_function();
+```
+
+Kalau function punya parameter, value dikirim di dalam tanda kurung.
+
+```rust
+fn greet_user(name: &str) {
+    println!("Halo, {}!", name);
+}
+
+fn main() {
+    greet_user("Budi");
+}
+```
+
+Parameter di Rust wajib punya type. Ini berbeda dari JavaScript atau Python yang biasanya tidak menulis type di parameter.
+
+## Function Dengan Return Type
+
+Kalau function mengembalikan value, return type ditulis setelah tanda `->`.
+
+```rust
+fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+fn main() {
+    let result = add(10, 5);
+    println!("{}", result);
+}
+```
+
+Bagian pentingnya:
+
+```rust
+fn add(a: i32, b: i32) -> i32
+```
+
+Artinya:
+
+- `add` menerima dua parameter
+- `a` bertipe `i32`
+- `b` bertipe `i32`
+- function mengembalikan `i32`
+
+Di Rust, expression terakhir di dalam function bisa menjadi return value tanpa keyword `return`.
+
+```rust
+fn double(value: i32) -> i32 {
+    value * 2
+}
+```
+
+Perhatikan tidak ada titik koma setelah `value * 2`.
+
+Kalau diberi titik koma, expression itu berubah menjadi statement dan tidak menjadi return value.
+
+```rust
+fn double(value: i32) -> i32 {
+    value * 2;
+}
+```
+
+Code di atas error karena function dijanjikan mengembalikan `i32`, tetapi body function tidak mengembalikan value.
+
+## Return Dengan Keyword `return`
+
+Rust tetap punya keyword `return`, tetapi biasanya dipakai untuk keluar lebih awal dari function.
+
+```rust
+fn divide(a: i32, b: i32) -> i32 {
+    if b == 0 {
+        return 0;
+    }
+
+    a / b
+}
+```
+
+Gaya yang umum di Rust adalah memakai expression terakhir untuk return normal, dan memakai `return` hanya saat butuh early return.
+
+## Function Tanpa Return Value
+
+Function yang tidak mengembalikan value sebenarnya mengembalikan unit type: `()`.
+
+```rust
+fn log_message(message: &str) {
+    println!("{}", message);
+}
+```
+
+Secara eksplisit, function itu bisa ditulis seperti ini:
+
+```rust
+fn log_message(message: &str) -> () {
+    println!("{}", message);
+}
+```
+
+Tapi biasanya `-> ()` tidak ditulis karena terlalu ramai dan tidak perlu.
+
+## Ownership Saat Memanggil Function
+
+Di Rust, cara mengirim argument ke function terkait dengan ownership.
+
+```rust
+fn print_name(name: String) {
+    println!("{}", name);
+}
+
+fn main() {
+    let name = String::from("Budi");
+    print_name(name);
+
+    // println!("{}", name); // error
+}
+```
+
+Saat `name` dikirim ke `print_name`, ownership berpindah ke parameter `name` di function tersebut. Setelah itu, variable `name` di `main` tidak bisa dipakai lagi.
+
+Kalau function hanya perlu membaca value, lebih umum memakai reference.
+
+```rust
+fn print_name(name: &String) {
+    println!("{}", name);
+}
+
+fn main() {
+    let name = String::from("Budi");
+    print_name(&name);
+
+    println!("{}", name);
+}
+```
+
+Tanda `&` berarti value dipinjam, bukan dipindahkan.
+
+Untuk string, parameter biasanya lebih fleksibel kalau memakai `&str`.
+
+```rust
+fn print_name(name: &str) {
+    println!("{}", name);
+}
+
+fn main() {
+    let name = String::from("Budi");
+
+    print_name(&name);
+    print_name("Sari");
+}
+```
+
+## Method di Rust
+
+Method adalah function yang terhubung ke sebuah type. Method ditulis di dalam block `impl`.
+
+```rust
+struct User {
+    name: String,
+    age: u8,
+}
+
+impl User {
+    fn greet(&self) {
+        println!("Halo, nama saya {}", self.name);
+    }
+}
+
+fn main() {
+    let user = User {
+        name: String::from("Budi"),
+        age: 20,
+    };
+
+    user.greet();
+}
+```
+
+`greet` disebut method karena parameter pertamanya adalah `self`, `&self`, atau `&mut self`.
+
+Cara memanggil method:
+
+```rust
+value.nama_method();
+```
+
+Pada contoh di atas, `user.greet()` memanggil method `greet` milik type `User`.
+
+## `self`, `&self`, dan `&mut self`
+
+Method di Rust biasanya punya salah satu dari tiga bentuk receiver.
+
+Pertama, `&self` untuk membaca data tanpa mengambil ownership.
+
+```rust
+impl User {
+    fn name(&self) -> &str {
+        &self.name
+    }
+}
+```
+
+Kedua, `&mut self` untuk mengubah data.
+
+```rust
+impl User {
+    fn birthday(&mut self) {
+        self.age = self.age + 1;
+    }
+}
+
+fn main() {
+    let mut user = User {
+        name: String::from("Budi"),
+        age: 20,
+    };
+
+    user.birthday();
+    println!("{}", user.age);
+}
+```
+
+Karena method `birthday` memakai `&mut self`, variable `user` harus dibuat dengan `mut`.
+
+Ketiga, `self` untuk mengambil ownership dari value.
+
+```rust
+impl User {
+    fn into_name(self) -> String {
+        self.name
+    }
+}
+
+fn main() {
+    let user = User {
+        name: String::from("Budi"),
+        age: 20,
+    };
+
+    let name = user.into_name();
+    println!("{}", name);
+
+    // println!("{}", user.age); // error
+}
+```
+
+Setelah `user.into_name()` dipanggil, ownership `user` masuk ke method. Karena itu, `user` tidak bisa dipakai lagi.
+
+## Associated Function
+
+Di dalam `impl`, tidak semua function adalah method. Kalau function tidak menerima `self`, function itu disebut associated function.
+
+```rust
+impl User {
+    fn new(name: &str, age: u8) -> User {
+        User {
+            name: String::from(name),
+            age,
+        }
+    }
+}
+
+fn main() {
+    let user = User::new("Budi", 20);
+    println!("{}", user.name);
+}
+```
+
+`new` bukan method karena tidak punya parameter `self`. Cara memanggilnya memakai `::`, bukan titik.
+
+```rust
+User::new("Budi", 20);
+```
+
+Associated function sering dipakai sebagai constructor.
+
+## Function vs Method di Rust
+
+Perbedaan paling penting:
+
+| Konsep | Function | Method |
+| --- | --- | --- |
+| Terhubung ke type tertentu | Tidak selalu | Ya |
+| Deklarasi | `fn name(...)` | `fn name(&self, ...)` di dalam `impl` |
+| Cara panggil | `name(...)` | `value.name(...)` |
+| Punya `self` | Tidak | Ya |
+| Cocok untuk | Logic umum | Behavior milik suatu type |
+
+Contoh function:
+
+```rust
+fn calculate_discount(price: i32) -> i32 {
+    price / 10
+}
+```
+
+Contoh method:
+
+```rust
+struct Product {
+    price: i32,
+}
+
+impl Product {
+    fn discount(&self) -> i32 {
+        self.price / 10
+    }
+}
+```
+
+Kalau logic-nya memang melekat pada data `Product`, method biasanya lebih rapi.
+
+## Perbedaan Dengan JavaScript
+
+Di JavaScript, function bisa ditulis tanpa type.
+
+```js
+function add(a, b) {
+  return a + b;
+}
+
+console.log(add(10, 5));
+```
+
+Rust lebih eksplisit.
+
+```rust
+fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+```
+
+Perbedaan penting:
+
+- Rust wajib tahu type parameter dan return value saat compile time
+- JavaScript mengecek banyak hal saat runtime
+- Rust bisa return expression terakhir tanpa `return`
+- JavaScript biasanya memakai `return` untuk mengembalikan value dari block function
+
+Untuk method, JavaScript biasanya memakai object atau class.
+
+```js
+const user = {
+  name: "Budi",
+  greet() {
+    console.log(`Halo, ${this.name}`);
+  },
+};
+
+user.greet();
+```
+
+Di Rust, `this` tidak ada. Rust memakai `self`.
+
+```rust
+impl User {
+    fn greet(&self) {
+        println!("Halo, {}", self.name);
+    }
+}
+```
+
+## Perbedaan Dengan Go
+
+Go punya function dan method juga.
+
+```go
+func Add(a int, b int) int {
+    return a + b
+}
+```
+
+Method di Go memakai receiver sebelum nama function.
+
+```go
+type User struct {
+    Name string
+}
+
+func (u User) Greet() {
+    fmt.Println("Halo,", u.Name)
+}
+```
+
+Di Rust, receiver ditulis sebagai parameter pertama di dalam method.
+
+```rust
+impl User {
+    fn greet(&self) {
+        println!("Halo, {}", self.name);
+    }
+}
+```
+
+Perbedaan penting:
+
+- Go memakai receiver seperti `(u User)` atau `(u *User)`
+- Rust memakai `self`, `&self`, atau `&mut self`
+- Rust lebih ketat soal ownership dan borrowing
+- Go memakai garbage collector, Rust tidak
+
+## Perbedaan Dengan Python
+
+Python juga memakai `self` untuk method instance.
+
+```py
+class User:
+    def __init__(self, name):
+        self.name = name
+
+    def greet(self):
+        print(f"Halo, {self.name}")
+```
+
+Rust juga memakai `self`, tetapi aturannya lebih eksplisit.
+
+```rust
+impl User {
+    fn greet(&self) {
+        println!("Halo, {}", self.name);
+    }
+}
+```
+
+Di Python, `self` biasanya selalu ditulis sebagai parameter pertama method instance. Di Rust, bentuk receiver punya arti ownership:
+
+- `&self` berarti meminjam untuk membaca
+- `&mut self` berarti meminjam untuk mengubah
+- `self` berarti mengambil ownership
+
+## Perbedaan Dengan Java
+
+Di Java, method biasanya berada di dalam class.
+
+```java
+class Calculator {
+    int add(int a, int b) {
+        return a + b;
+    }
+}
+```
+
+Di Rust, data dan behavior dipisah: data ditulis di `struct`, behavior ditulis di `impl`.
+
+```rust
+struct Calculator;
+
+impl Calculator {
+    fn add(&self, a: i32, b: i32) -> i32 {
+        a + b
+    }
+}
+```
+
+Perbedaan penting:
+
+- Java memakai class sebagai pusat data dan behavior
+- Rust memakai `struct` untuk data dan `impl` untuk behavior
+- Java punya `this`
+- Rust memakai `self`
+- Rust tidak punya inheritance class seperti Java
+
+## Ringkasnya
+
+Function di Rust dibuat dengan `fn` dan dipanggil langsung dengan nama function.
+
+```rust
+fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+let result = add(10, 5);
+```
+
+Method adalah function yang melekat pada type lewat `impl` dan dipanggil dari value.
+
+```rust
+impl User {
+    fn greet(&self) {
+        println!("Halo, {}", self.name);
+    }
+}
+
+user.greet();
+```
+
+Return type ditulis setelah `->`. Kalau tidak ada return value, function mengembalikan `()`.
+
+Hal yang paling khas dari Rust adalah `self` bukan sekadar penanda object seperti `this` di bahasa lain. Bentuk `self`, `&self`, dan `&mut self` menentukan apakah method mengambil ownership, hanya membaca, atau boleh mengubah data.
