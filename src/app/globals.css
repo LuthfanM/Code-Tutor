@@ -4,28 +4,28 @@
 
 :root {
   color-scheme: light;
-  --color-ink: 17 24 39;
-  --color-muted: 102 112 133;
-  --color-line: 223 228 234;
-  --color-paper: 251 252 254;
+  --color-ink: 13 26 38;
+  --color-muted: 83 99 113;
+  --color-line: 196 214 222;
+  --color-paper: 244 250 251;
   --color-surface: 255 255 255;
-  --color-surface-soft: 248 250 252;
-  --color-accent: 37 99 235;
-  --color-leaf: 22 163 74;
-  --shadow-soft: 0 18px 55px rgba(15, 23, 42, 0.08);
+  --color-surface-soft: 232 244 247;
+  --color-accent: 0 131 145;
+  --color-leaf: 16 132 102;
+  --shadow-soft: 0 22px 70px rgba(7, 53, 66, 0.12);
 }
 
 .dark {
   color-scheme: dark;
-  --color-ink: 241 245 249;
-  --color-muted: 148 163 184;
-  --color-line: 51 65 85;
-  --color-paper: 15 23 42;
-  --color-surface: 30 41 59;
-  --color-surface-soft: 15 23 42;
-  --color-accent: 96 165 250;
-  --color-leaf: 74 222 128;
-  --shadow-soft: 0 18px 55px rgba(0, 0, 0, 0.28);
+  --color-ink: 234 246 247;
+  --color-muted: 146 173 181;
+  --color-line: 43 75 86;
+  --color-paper: 8 20 28;
+  --color-surface: 13 31 42;
+  --color-surface-soft: 10 37 49;
+  --color-accent: 61 200 210;
+  --color-leaf: 76 211 166;
+  --shadow-soft: 0 22px 70px rgba(0, 0, 0, 0.32);
 }
 
 * {
@@ -34,8 +34,13 @@
 
 body {
   margin: 0;
-  background: rgb(var(--color-paper));
+  background:
+    radial-gradient(circle at 12% 0%, rgb(var(--color-accent) / 0.16), transparent 30rem),
+    radial-gradient(circle at 88% 12%, rgb(var(--color-leaf) / 0.12), transparent 26rem),
+    rgb(var(--color-paper));
   color: rgb(var(--color-ink));
+  font-family: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  text-rendering: geometricPrecision;
 }
 
 a {
@@ -46,9 +51,101 @@ a {
   background: rgb(var(--color-accent) / 0.22);
 }
 
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.water-hero {
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.water-orbit {
+  animation: water-orbit 12s ease-in-out infinite;
+}
+
+.water-orbit-delayed {
+  animation: water-orbit 15s ease-in-out infinite reverse;
+}
+
+.water-current {
+  animation: water-current 6s ease-in-out infinite;
+}
+
+.study-token {
+  animation: study-token 5.5s ease-in-out infinite;
+}
+
+.study-token:nth-child(2) {
+  animation-delay: 0.65s;
+}
+
+.study-token:nth-child(3) {
+  animation-delay: 1.15s;
+}
+
+@keyframes water-orbit {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate3d(18px, -16px, 0) rotate(4deg) scale(1.04);
+  }
+}
+
+@keyframes water-current {
+  0%,
+  100% {
+    transform: translateX(-8%) skewX(-8deg);
+    opacity: 0.48;
+  }
+  50% {
+    transform: translateX(8%) skewX(-8deg);
+    opacity: 0.82;
+  }
+}
+
+@keyframes study-token {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -12px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+
+  .water-orbit,
+  .water-orbit-delayed,
+  .water-current,
+  .study-token {
+    animation: none !important;
+  }
+}
+
 .dark .bg-white,
+.dark .bg-white\/35,
+.dark .bg-white\/45,
+.dark .bg-white\/50,
+.dark .bg-white\/55,
+.dark .bg-white\/60,
+.dark .bg-white\/62,
 .dark .bg-white\/70,
+.dark .bg-white\/72,
+.dark .bg-white\/78,
 .dark .bg-white\/80,
+.dark .bg-white\/82,
 .dark .bg-white\/85,
 .dark .bg-white\/90 {
   background-color: rgb(var(--color-surface) / 0.92);
@@ -82,6 +179,11 @@ a {
 
 .dark .text-blue-700 {
   color: rgb(var(--color-accent));
+}
+
+.dark .text-teal-900,
+.dark .text-teal-950 {
+  color: rgb(var(--color-ink));
 }
 
 .dark .border-slate-300,
@@ -120,7 +222,10 @@ a {
   color: rgb(var(--color-ink));
 }
 
-.dark .bg-\[radial-gradient\(circle_at_top_left\2c \#dbeafe\2c transparent_34\%\)\2c linear-gradient\(180deg\2c \#fbfcfe\2c \#eef6ff\)\] {
-  background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.24), transparent 34%),
-    linear-gradient(180deg, rgb(15 23 42), rgb(17 24 39));
+.dark .from-white,
+.dark .via-cyan-50,
+.dark .to-emerald-50 {
+  --tw-gradient-from: rgb(8 20 28) var(--tw-gradient-from-position);
+  --tw-gradient-via: rgb(11 35 46) var(--tw-gradient-via-position);
+  --tw-gradient-to: rgb(8 20 28) var(--tw-gradient-to-position);
 }

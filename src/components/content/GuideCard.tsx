@@ -13,7 +13,7 @@ export function GuideCard({ guide }: { guide: ContentDoc }) {
         <Badge>{category}</Badge>
         <span className="text-xs font-medium text-slate-500">{guide.meta.readingTime}</span>
       </div>
-      <h3 className="text-lg font-bold text-ink">{guide.meta.title}</h3>
+      <h3 className="text-lg font-bold tracking-tight text-ink">{guide.meta.title}</h3>
       <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">{guide.meta.description}</p>
       <Link
         href={`/guides/${category}/${guide.meta.slug}`}

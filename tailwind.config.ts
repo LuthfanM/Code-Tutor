@@ -15,6 +15,10 @@ const config: Config = {
       },
       boxShadow: {
         soft: "var(--shadow-soft)"
+      },
+      fontFamily: {
+        sans: ["var(--font-geist)", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "ui-monospace", "SFMono-Regular", "monospace"]
       }
     }
   },
