@@ -1,14 +1,41 @@
 import path from "node:path";
-import { getContentDir, listMdxFiles, readMdxFile } from "@/lib/mdx";
+import fs from "node:fs";
+import { getContentDir, readMdxFile } from "@/lib/mdx";
+
+const blogDir = getContentDir("blog");
+
+function listBlogMdxFiles(dir = blogDir): string[] {
+  if (!fs.existsSync(dir)) return [];
+
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      return listBlogMdxFiles(entryPath);
+    }
+
+    return entry.isFile() && entry.name.endsWith(".mdx") ? [entryPath] : [];
+  });
+}
+
+function getBlogFileBySlug(slug: string) {
+  return listBlogMdxFiles().find((filePath) => path.basename(filePath, ".mdx") === slug);
+}
 
 export function getPosts() {
-  return listMdxFiles(getContentDir("blog"))
+  return listBlogMdxFiles()
     .map(readMdxFile)
     .sort((a, b) => String(b.meta.date).localeCompare(String(a.meta.date)));
 }
 
 export function getPost(slug: string) {
-  return readMdxFile(path.join(getContentDir("blog"), `${slug}.mdx`));
+  const filePath = getBlogFileBySlug(slug);
+
+  if (!filePath) {
+    throw new Error(`Blog post not found: ${slug}`);
+  }
+
+  return readMdxFile(filePath);
 }
 
 export function getPostPaths() {

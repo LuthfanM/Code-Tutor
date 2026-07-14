@@ -4,14 +4,19 @@ import type { ContentDoc } from "@/lib/mdx";
 
 export function BlogCard({ post }: { post: ContentDoc }) {
   return (
-    <Card>
+    <Card className="relative h-full cursor-pointer">
+      <Link
+        href={`/blog/${post.meta.slug}`}
+        aria-label={`Read ${post.meta.title}`}
+        className="absolute inset-0 z-10 rounded-2xl"
+      />
       <p className="text-sm font-semibold text-accent">
         {post.meta.date}
       </p>
-      <h3 className="mt-3 text-xl font-bold tracking-tight text-ink">{post.meta.title}</h3>
+      <h3 className="mt-3 text-lg font-bold tracking-tight text-ink">{post.meta.title}</h3>
       <p className="mt-2 text-sm leading-6 text-slate-600">{post.meta.description}</p>
       {post.meta.tags?.length ? (
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="relative z-20 mt-4 flex flex-wrap gap-2">
           {post.meta.tags.map((tag) => (
             <Link
               key={tag}
@@ -23,9 +28,6 @@ export function BlogCard({ post }: { post: ContentDoc }) {
           ))}
         </div>
       ) : null}
-      <Link href={`/blog/${post.meta.slug}`} className="mt-4 inline-block text-sm font-semibold text-accent">
-        Read note
-      </Link>
     </Card>
   );
 }

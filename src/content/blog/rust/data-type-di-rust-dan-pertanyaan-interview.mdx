@@ -1,0 +1,855 @@
+---
+title: "Data Type di Rust dan Pertanyaan Interview yang Sering Muncul"
+description: "Belajar data type di Rust dari scalar, compound, String, reference, Option, Result, sampai pertanyaan interview yang sering muncul."
+slug: "data-type-di-rust-dan-pertanyaan-interview"
+date: "2026-07-14"
+readingTime: "12 min"
+tags:
+  - rust
+  - beginner
+  - interview
+---
+
+# Data Type di Rust dan Pertanyaan Interview yang Sering Muncul
+
+Data type di Rust bukan cuma soal `i32`, `String`, atau `bool`. Saat belajar Rust, type system adalah salah satu bagian paling penting karena berhubungan langsung dengan ownership, borrowing, memory safety, error handling, dan cara compiler mencegah bug sebelum program dijalankan.
+
+Kalau kamu pernah belajar JavaScript atau Python, mungkin kamu terbiasa variable bisa berubah type dengan bebas. Di Rust, setiap value punya type yang jelas. Compiler bisa menebak sebagian type lewat inference, tetapi aturan type-nya tetap ketat.
+
+Artikel ini membahas data type dasar di Rust, perbedaan yang sering bikin bingung, dan pertanyaan interview yang biasanya muncul.
+
+## Rust Adalah Statically Typed Language
+
+Rust adalah bahasa statically typed. Artinya, type dari variable harus diketahui saat compile time.
+
+```rust
+fn main() {
+    let age = 20;
+    let name = "Budi";
+    let is_active = true;
+
+    println!("{} {} {}", age, name, is_active);
+}
+```
+
+Di contoh ini, kita tidak menulis type secara eksplisit. Tapi compiler tetap tahu:
+
+- `age` adalah integer
+- `name` adalah string slice
+- `is_active` adalah boolean
+
+Ini disebut type inference. Rust bisa menebak type dari value dan context.
+
+Kalau context-nya tidak cukup, kamu perlu memberi type annotation.
+
+```rust
+fn main() {
+    let number: i32 = "42".parse().unwrap();
+    println!("{}", number);
+}
+```
+
+Tanpa `: i32`, compiler bisa bingung karena `"42"` bisa di-parse menjadi banyak type angka, misalnya `i32`, `u32`, `f64`, dan lainnya.
+
+## Scalar Type
+
+Scalar type adalah type yang menyimpan satu value. Di Rust, scalar type utama adalah integer, floating point, boolean, dan character.
+
+## Integer
+
+Integer dipakai untuk angka bulat.
+
+```rust
+fn main() {
+    let age: u8 = 25;
+    let score: i32 = -10;
+    let population: u64 = 270_000_000;
+
+    println!("{} {} {}", age, score, population);
+}
+```
+
+Rust punya integer signed dan unsigned.
+
+Signed integer bisa menyimpan angka negatif:
+
+```rust
+let temperature: i32 = -5;
+```
+
+Unsigned integer hanya menyimpan angka nol atau positif:
+
+```rust
+let age: u8 = 25;
+```
+
+Beberapa type integer yang sering dipakai:
+
+- `i8`, `i16`, `i32`, `i64`, `i128`, `isize`
+- `u8`, `u16`, `u32`, `u64`, `u128`, `usize`
+
+Huruf `i` berarti signed integer. Huruf `u` berarti unsigned integer.
+
+Secara default, integer literal biasanya dianggap sebagai `i32` kalau tidak ada context lain.
+
+```rust
+fn main() {
+    let number = 10; // i32 by default
+    println!("{}", number);
+}
+```
+
+## `usize` dan `isize`
+
+`usize` dan `isize` ukurannya mengikuti arsitektur mesin.
+
+Di mesin 64-bit, `usize` biasanya 64-bit. Di mesin 32-bit, `usize` biasanya 32-bit.
+
+`usize` sering muncul saat bekerja dengan index atau panjang collection.
+
+```rust
+fn main() {
+    let names = ["Ayu", "Budi", "Citra"];
+    let index: usize = 1;
+
+    println!("{}", names[index]);
+}
+```
+
+Kenapa index memakai `usize`? Karena index harus bisa merepresentasikan ukuran memory yang bisa diakses oleh platform tersebut.
+
+## Floating Point
+
+Floating point dipakai untuk angka pecahan.
+
+```rust
+fn main() {
+    let price: f64 = 19.99;
+    let ratio: f32 = 0.75;
+
+    println!("{} {}", price, ratio);
+}
+```
+
+Rust punya dua floating point type:
+
+- `f32`
+- `f64`
+
+Default-nya adalah `f64` karena biasanya lebih presisi.
+
+```rust
+fn main() {
+    let value = 3.14; // f64 by default
+    println!("{}", value);
+}
+```
+
+Untuk interview, hal penting yang perlu diingat: floating point tidak cocok untuk perhitungan uang yang butuh presisi absolut. Untuk uang, biasanya lebih aman memakai integer dalam satuan terkecil, misalnya sen atau rupiah, atau memakai decimal library.
+
+## Boolean
+
+Boolean hanya punya dua value: `true` dan `false`.
+
+```rust
+fn main() {
+    let is_logged_in: bool = true;
+
+    if is_logged_in {
+        println!("Welcome");
+    }
+}
+```
+
+Di Rust, kondisi `if` harus bertipe `bool`.
+
+```rust
+fn main() {
+    let number = 1;
+
+    // if number {
+    //     println!("Tidak boleh");
+    // }
+}
+```
+
+Rust tidak menganggap `1` sebagai `true` atau `0` sebagai `false`. Ini berbeda dari JavaScript, C, atau Python.
+
+## Character
+
+`char` di Rust menyimpan satu Unicode scalar value.
+
+```rust
+fn main() {
+    let letter: char = 'A';
+    let emoji: char = '🚀';
+
+    println!("{} {}", letter, emoji);
+}
+```
+
+`char` memakai tanda petik satu. String memakai tanda petik dua.
+
+```rust
+let c = 'A';   // char
+let s = "A";   // &str
+```
+
+Ini sering jadi pertanyaan kecil saat interview karena di Rust `char` bukan sekadar 1 byte. Ukurannya 4 byte karena mendukung Unicode scalar value.
+
+## Compound Type
+
+Compound type adalah type yang menggabungkan beberapa value.
+
+Rust punya dua compound type dasar:
+
+- tuple
+- array
+
+## Tuple
+
+Tuple bisa menyimpan beberapa value dengan type yang berbeda.
+
+```rust
+fn main() {
+    let user: (&str, u8, bool) = ("Budi", 25, true);
+
+    println!("{}", user.0);
+    println!("{}", user.1);
+    println!("{}", user.2);
+}
+```
+
+Tuple cocok untuk grouping sederhana. Tapi kalau datanya punya makna bisnis yang jelas, biasanya lebih baik memakai `struct`.
+
+```rust
+struct User {
+    name: String,
+    age: u8,
+    is_active: bool,
+}
+```
+
+`struct` lebih mudah dibaca karena field punya nama.
+
+## Unit Type
+
+Tuple kosong `()` disebut unit type.
+
+```rust
+fn log_message(message: &str) {
+    println!("{}", message);
+}
+```
+
+Function di atas sebenarnya mengembalikan `()`.
+
+```rust
+fn log_message(message: &str) -> () {
+    println!("{}", message);
+}
+```
+
+Unit type sering muncul saat function hanya melakukan aksi dan tidak mengembalikan data penting.
+
+## Array
+
+Array menyimpan banyak value dengan type yang sama dan panjang yang tetap.
+
+```rust
+fn main() {
+    let numbers: [i32; 3] = [10, 20, 30];
+
+    println!("{}", numbers[0]);
+}
+```
+
+Type `[i32; 3]` berarti array berisi `i32` dengan panjang 3.
+
+Kalau butuh collection yang panjangnya bisa berubah, biasanya memakai `Vec<T>`.
+
+```rust
+fn main() {
+    let mut numbers = Vec::new();
+
+    numbers.push(10);
+    numbers.push(20);
+
+    println!("{:?}", numbers);
+}
+```
+
+Perbedaan interview yang sering muncul:
+
+- array punya panjang tetap
+- `Vec<T>` punya panjang dinamis
+- array biasanya cocok untuk data kecil yang ukurannya sudah pasti
+- `Vec<T>` cocok untuk data yang jumlahnya berubah saat runtime
+
+## String Slice dan String
+
+Di Rust, pembahasan string sering bikin bingung karena ada `&str` dan `String`.
+
+`&str` adalah string slice. Biasanya dipakai untuk melihat atau meminjam text.
+
+```rust
+fn main() {
+    let name: &str = "Budi";
+    println!("{}", name);
+}
+```
+
+String literal seperti `"Budi"` bertipe `&str`.
+
+`String` adalah owned string yang bisa berubah ukuran.
+
+```rust
+fn main() {
+    let mut name = String::from("Budi");
+    name.push_str(" Santoso");
+
+    println!("{}", name);
+}
+```
+
+Perbedaan penting:
+
+- `&str` adalah borrowed string slice
+- `String` memiliki ownership terhadap data string
+- `String` bisa dimutasi jika binding-nya `mut`
+- string literal biasanya bertipe `&'static str`
+
+Saat membuat function yang hanya membaca text, parameter `&str` biasanya lebih fleksibel.
+
+```rust
+fn greet(name: &str) {
+    println!("Halo, {}", name);
+}
+
+fn main() {
+    let owned = String::from("Budi");
+
+    greet("Ayu");
+    greet(&owned);
+}
+```
+
+Function `greet` bisa menerima string literal dan reference ke `String`.
+
+## Reference
+
+Reference bukan sekadar "alamat memory" dalam gaya C. Di Rust, reference adalah cara meminjam value tanpa mengambil ownership.
+
+```rust
+fn print_name(name: &String) {
+    println!("{}", name);
+}
+
+fn main() {
+    let name = String::from("Budi");
+
+    print_name(&name);
+    println!("{}", name);
+}
+```
+
+Karena `print_name` hanya meminjam `name`, variable `name` masih bisa dipakai setelah function dipanggil.
+
+Biasanya untuk string, lebih idiomatis memakai `&str`.
+
+```rust
+fn print_name(name: &str) {
+    println!("{}", name);
+}
+```
+
+Reference juga bisa mutable.
+
+```rust
+fn add_suffix(name: &mut String) {
+    name.push_str("!");
+}
+
+fn main() {
+    let mut name = String::from("Rust");
+
+    add_suffix(&mut name);
+    println!("{}", name);
+}
+```
+
+Aturan penting borrowing:
+
+- boleh punya banyak immutable reference
+- boleh punya satu mutable reference
+- tidak boleh mencampur mutable reference dan immutable reference yang aktif pada waktu yang sama
+
+Aturan ini membantu Rust mencegah data race dan bug memory.
+
+## Struct
+
+`struct` dipakai untuk membuat data type sendiri dengan field bernama.
+
+```rust
+struct User {
+    name: String,
+    age: u8,
+    is_active: bool,
+}
+
+fn main() {
+    let user = User {
+        name: String::from("Budi"),
+        age: 25,
+        is_active: true,
+    };
+
+    println!("{}", user.name);
+}
+```
+
+`struct` cocok untuk merepresentasikan entity atau data yang punya bentuk jelas.
+
+Kalau field perlu diubah, binding struct harus `mut`.
+
+```rust
+fn main() {
+    let mut user = User {
+        name: String::from("Budi"),
+        age: 25,
+        is_active: true,
+    };
+
+    user.age = 26;
+}
+```
+
+## Enum
+
+`enum` dipakai untuk membuat type yang bisa punya beberapa kemungkinan bentuk.
+
+```rust
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+```
+
+Enum di Rust bisa membawa data.
+
+```rust
+enum Message {
+    Quit,
+    Move { x: i32, y: i32 },
+    Write(String),
+}
+```
+
+Ini membuat enum Rust jauh lebih kuat daripada enum biasa di banyak bahasa lain.
+
+Biasanya enum dipakai bersama `match`.
+
+```rust
+fn handle_message(message: Message) {
+    match message {
+        Message::Quit => println!("quit"),
+        Message::Move { x, y } => println!("move to {}, {}", x, y),
+        Message::Write(text) => println!("{}", text),
+    }
+}
+```
+
+## Option
+
+Rust tidak punya `null` seperti banyak bahasa lain. Untuk value yang mungkin ada atau tidak ada, Rust memakai `Option<T>`.
+
+```rust
+fn find_user(id: u32) -> Option<String> {
+    if id == 1 {
+        Some(String::from("Budi"))
+    } else {
+        None
+    }
+}
+```
+
+Cara memakai `Option` biasanya dengan `match`, `if let`, atau helper method seperti `unwrap_or`.
+
+```rust
+fn main() {
+    let user = find_user(2);
+
+    match user {
+        Some(name) => println!("Found {}", name),
+        None => println!("User not found"),
+    }
+}
+```
+
+Pertanyaan interview yang sering muncul: kenapa Rust tidak punya `null`?
+
+Jawaban pendeknya: karena `null` sering menyebabkan runtime error. Dengan `Option<T>`, kemungkinan kosong dipaksa terlihat di type system, sehingga programmer harus menanganinya secara eksplisit.
+
+## Result
+
+Untuk operasi yang bisa gagal, Rust memakai `Result<T, E>`.
+
+```rust
+fn divide(a: i32, b: i32) -> Result<i32, String> {
+    if b == 0 {
+        Err(String::from("cannot divide by zero"))
+    } else {
+        Ok(a / b)
+    }
+}
+```
+
+`Result` punya dua kemungkinan:
+
+- `Ok(value)` untuk operasi sukses
+- `Err(error)` untuk operasi gagal
+
+Contoh memakai `match`:
+
+```rust
+fn main() {
+    match divide(10, 2) {
+        Ok(result) => println!("{}", result),
+        Err(error) => println!("{}", error),
+    }
+}
+```
+
+Di Rust, error handling biasanya eksplisit lewat type, bukan lewat exception sebagai default.
+
+## Type Alias
+
+Type alias memberi nama lain untuk type yang sudah ada.
+
+```rust
+type UserId = u64;
+
+fn find_user(id: UserId) {
+    println!("Find user {}", id);
+}
+```
+
+Type alias bisa membuat code lebih ekspresif, tetapi tidak membuat type baru yang benar-benar berbeda.
+
+```rust
+type UserId = u64;
+type ProductId = u64;
+```
+
+`UserId` dan `ProductId` tetap sama-sama `u64`. Kalau butuh type yang benar-benar berbeda secara type checking, biasanya gunakan newtype pattern dengan tuple struct.
+
+```rust
+struct UserId(u64);
+struct ProductId(u64);
+```
+
+## Generic Type
+
+Generic membuat code bisa bekerja dengan banyak type.
+
+```rust
+fn identity<T>(value: T) -> T {
+    value
+}
+
+fn main() {
+    let a = identity(10);
+    let b = identity("Rust");
+
+    println!("{} {}", a, b);
+}
+```
+
+`T` adalah placeholder type. Saat function dipanggil, compiler menentukan type konkretnya.
+
+Generic sering muncul di standard library:
+
+```rust
+Option<T>
+Result<T, E>
+Vec<T>
+```
+
+Artinya:
+
+- `Option<T>` bisa berisi value dengan type apa pun
+- `Result<T, E>` punya type sukses `T` dan type error `E`
+- `Vec<T>` adalah vector berisi item dengan type `T`
+
+## Copy dan Move
+
+Data type di Rust juga berhubungan dengan ownership.
+
+Type sederhana seperti integer, boolean, floating point, dan `char` biasanya implement trait `Copy`.
+
+```rust
+fn main() {
+    let a = 10;
+    let b = a;
+
+    println!("{}", a);
+    println!("{}", b);
+}
+```
+
+`a` masih bisa dipakai karena `i32` di-copy.
+
+Tapi `String` tidak `Copy`.
+
+```rust
+fn main() {
+    let a = String::from("Rust");
+    let b = a;
+
+    // println!("{}", a); // error
+    println!("{}", b);
+}
+```
+
+Ownership dari string berpindah dari `a` ke `b`. Ini disebut move.
+
+Kalau ingin membuat salinan data heap, gunakan `clone`.
+
+```rust
+fn main() {
+    let a = String::from("Rust");
+    let b = a.clone();
+
+    println!("{}", a);
+    println!("{}", b);
+}
+```
+
+Saat interview, jangan jawab "semua assignment di Rust itu copy". Jawaban yang lebih tepat: assignment bisa copy atau move tergantung type-nya.
+
+## Pertanyaan Interview Tentang Data Type Rust
+
+Bagian ini berisi pertanyaan yang sering muncul dan jawaban singkat yang aman untuk interview.
+
+## 1. Apa bedanya `i32` dan `u32`?
+
+`i32` adalah signed integer 32-bit, jadi bisa menyimpan angka negatif dan positif. `u32` adalah unsigned integer 32-bit, jadi hanya bisa menyimpan angka nol dan positif.
+
+```rust
+let a: i32 = -10;
+let b: u32 = 10;
+```
+
+Gunakan signed integer saat nilai bisa negatif. Gunakan unsigned integer saat nilai secara konsep tidak boleh negatif, tetapi tetap hati-hati karena operasi seperti pengurangan bisa underflow.
+
+## 2. Apa bedanya `usize` dengan `u64`?
+
+`usize` ukurannya mengikuti arsitektur target dan biasa dipakai untuk index atau size collection. `u64` selalu unsigned integer 64-bit.
+
+Di platform 64-bit, ukuran `usize` biasanya sama dengan `u64`. Tapi secara konsep, keduanya berbeda.
+
+## 3. Apa default type untuk integer dan floating point?
+
+Integer default-nya biasanya `i32`. Floating point default-nya `f64`.
+
+```rust
+let a = 10;   // i32
+let b = 3.14; // f64
+```
+
+Tapi compiler bisa memilih type lain kalau context-nya jelas.
+
+## 4. Apa bedanya `char`, `&str`, dan `String`?
+
+`char` menyimpan satu Unicode scalar value. `&str` adalah borrowed string slice. `String` adalah owned string yang bisa bertambah atau berubah.
+
+```rust
+let a: char = 'R';
+let b: &str = "Rust";
+let c: String = String::from("Rust");
+```
+
+Untuk parameter function yang hanya membaca text, `&str` biasanya pilihan yang fleksibel.
+
+## 5. Kenapa Rust punya `String` dan `&str`?
+
+Karena Rust membedakan ownership dan borrowing.
+
+`String` memiliki data string. `&str` hanya meminjam potongan string. Dengan pemisahan ini, Rust bisa mengatur memory dengan aman tanpa garbage collector.
+
+## 6. Apa bedanya array dan vector?
+
+Array punya panjang tetap dan type-nya mencakup panjang tersebut.
+
+```rust
+let numbers: [i32; 3] = [1, 2, 3];
+```
+
+`Vec<T>` punya panjang dinamis dan bisa berubah saat runtime.
+
+```rust
+let mut numbers: Vec<i32> = Vec::new();
+numbers.push(1);
+```
+
+## 7. Apa bedanya tuple dan struct?
+
+Tuple cocok untuk grouping sederhana tanpa nama field.
+
+```rust
+let point = (10, 20);
+```
+
+Struct cocok untuk data yang punya makna jelas dan butuh field bernama.
+
+```rust
+struct Point {
+    x: i32,
+    y: i32,
+}
+```
+
+Untuk code produksi, struct sering lebih mudah dibaca daripada tuple panjang.
+
+## 8. Apa itu unit type `()`?
+
+Unit type adalah type yang hanya punya satu value, yaitu `()`. Function yang tidak mengembalikan value sebenarnya mengembalikan unit type.
+
+```rust
+fn say_hi() {
+    println!("hi");
+}
+```
+
+Function di atas sama seperti:
+
+```rust
+fn say_hi() -> () {
+    println!("hi");
+}
+```
+
+## 9. Apa bedanya `Option` dan `Result`?
+
+`Option<T>` dipakai saat value mungkin ada atau tidak ada.
+
+```rust
+Some(10)
+None
+```
+
+`Result<T, E>` dipakai saat operasi bisa sukses atau gagal, dan kita ingin menyimpan informasi error.
+
+```rust
+Ok(10)
+Err("failed")
+```
+
+Gunakan `Option` untuk absence. Gunakan `Result` untuk failure.
+
+## 10. Kenapa Rust tidak punya `null`?
+
+Rust mengganti konsep `null` dengan `Option<T>`. Tujuannya agar kemungkinan value kosong terlihat di type system.
+
+Dengan begitu, compiler bisa memaksa programmer menangani `Some` dan `None`.
+
+```rust
+let user: Option<String> = None;
+```
+
+Ini mengurangi risiko error seperti null pointer exception.
+
+## 11. Apa itu type inference?
+
+Type inference adalah kemampuan compiler untuk menebak type tanpa kita tulis secara eksplisit.
+
+```rust
+let age = 20;
+```
+
+Compiler bisa menebak `age` sebagai integer. Tapi kalau context tidak cukup, kita perlu memberi annotation.
+
+```rust
+let age: u8 = 20;
+```
+
+## 12. Apa bedanya type alias dan newtype?
+
+Type alias hanya memberi nama lain untuk type yang sama.
+
+```rust
+type UserId = u64;
+```
+
+Newtype membuat type baru memakai wrapper struct.
+
+```rust
+struct UserId(u64);
+```
+
+Kalau butuh type checking yang lebih kuat, newtype lebih cocok.
+
+## 13. Apa hubungan data type dengan ownership?
+
+Ownership menentukan bagaimana value dipindahkan, dipinjam, atau disalin.
+
+Type seperti `i32` biasanya `Copy`, jadi assignment membuat salinan.
+
+```rust
+let a = 10;
+let b = a;
+println!("{}", a);
+```
+
+Type seperti `String` biasanya move, jadi ownership berpindah.
+
+```rust
+let a = String::from("Rust");
+let b = a;
+// a tidak bisa dipakai lagi
+```
+
+## 14. Kapan memakai reference daripada owned value?
+
+Pakai reference saat function hanya perlu membaca atau memodifikasi sementara tanpa mengambil ownership.
+
+```rust
+fn print_name(name: &str) {
+    println!("{}", name);
+}
+```
+
+Pakai owned value saat function memang perlu menyimpan, mengubah kepemilikan, atau mengembalikan value tersebut.
+
+## 15. Kenapa kondisi `if` di Rust harus `bool`?
+
+Rust sengaja tidak memakai truthy dan falsy conversion. Kondisi harus jelas bertipe `bool`.
+
+```rust
+let count = 1;
+
+if count > 0 {
+    println!("ada data");
+}
+```
+
+Ini membuat code lebih eksplisit dan mengurangi bug dari konversi otomatis.
+
+## Ringkasan
+
+Data type di Rust penting karena menjadi dasar dari banyak fitur utama Rust.
+
+Yang perlu kamu kuasai:
+
+- scalar type: integer, floating point, boolean, char
+- compound type: tuple dan array
+- `String` vs `&str`
+- reference dan borrowing
+- `struct` dan `enum`
+- `Option` untuk value yang mungkin kosong
+- `Result` untuk operasi yang bisa gagal
+- perbedaan copy dan move
+
+Untuk interview, jangan cuma hafal nama type. Fokus pada alasan desain Rust: type system dipakai untuk membuat bug lebih cepat ketahuan, terutama bug yang berhubungan dengan memory, null, dan error handling.
