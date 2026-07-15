@@ -1,0 +1,907 @@
+---
+title: "String di Rust: Kenapa Ada String, &str, dan Tanda &?"
+description: "Pembahasan detail tentang String, &str, reference, borrowing, ownership, slice, dan alasan Rust sering memakai tanda & saat bekerja dengan text."
+slug: "string-di-rust-kenapa-pakai-reference-dan-str"
+date: "2026-07-15"
+readingTime: "13 min"
+tags:
+  - rust
+  - beginner
+  - ownership
+  - interview
+---
+
+# String di Rust: Kenapa Ada String, &str, dan Tanda &?
+
+Saat baru belajar Rust, bagian string sering terasa aneh.
+
+Di JavaScript, kita tinggal menulis:
+
+```js
+const name = "Budi";
+```
+
+Di Go, kurang lebih juga sederhana:
+
+```go
+name := "Budi"
+```
+
+Tapi di Rust, kamu cepat bertemu beberapa bentuk:
+
+```rust
+let a = "Budi";
+let b = String::from("Budi");
+let c = &b;
+let d = b.as_str();
+```
+
+Lalu muncul pertanyaan:
+
+- Kenapa ada `String` dan `&str`?
+- Kenapa function sering menerima `&str`, bukan `String`?
+- Kenapa harus pakai tanda `&`?
+- Kapan value string pindah ownership?
+- Kenapa setelah dikirim ke function, variable kadang tidak bisa dipakai lagi?
+
+Artikel ini fokus menjelaskan string di Rust dari dasar sampai alasan desainnya.
+
+## Masalah Utama: Rust Peduli Ownership
+
+Rust tidak punya garbage collector seperti JavaScript, Go, atau Java. Rust juga tidak membiarkan programmer mengatur memory secara bebas seperti C.
+
+Sebagai gantinya, Rust memakai ownership.
+
+Setiap value punya owner. Saat owner keluar dari scope, value itu dibersihkan dari memory.
+
+```rust
+fn main() {
+    let name = String::from("Budi");
+
+    println!("{}", name);
+}
+```
+
+Di contoh ini, `name` adalah owner dari data string `"Budi"`. Saat function `main` selesai, data milik `name` dibersihkan.
+
+Karena ownership inilah Rust membedakan antara:
+
+- value yang memiliki data
+- reference yang hanya meminjam data
+- slice yang hanya melihat sebagian data
+
+String di Rust jadi terasa lebih detail karena Rust ingin memory safety tanpa garbage collector.
+
+## `String` Adalah Owned String
+
+`String` adalah type string yang memiliki data text.
+
+```rust
+fn main() {
+    let name = String::from("Budi");
+
+    println!("{}", name);
+}
+```
+
+Kata "owned" penting. Artinya variable `name` memiliki data string tersebut.
+
+`String` biasanya disimpan di heap karena panjang text bisa berubah saat runtime.
+
+```rust
+fn main() {
+    let mut name = String::from("Budi");
+
+    name.push_str(" Santoso");
+
+    println!("{}", name);
+}
+```
+
+Di contoh ini, `name` bisa bertambah panjang. Karena itu `String` cocok untuk text yang dibuat, diubah, atau diterima saat program berjalan.
+
+Contoh penggunaan `String`:
+
+```rust
+let username = String::from("budi123");
+let input = String::new();
+let message = format!("Halo, {}", username);
+```
+
+Biasanya `String` dipakai saat kamu perlu memiliki data text tersebut.
+
+## `&str` Adalah String Slice
+
+`&str` dibaca sebagai "reference to string slice".
+
+Contoh paling umum:
+
+```rust
+fn main() {
+    let name = "Budi";
+
+    println!("{}", name);
+}
+```
+
+Variable `name` di atas bukan `String`. Type-nya adalah `&str`.
+
+String literal seperti `"Budi"` disimpan di binary program dan biasanya punya lifetime `'static`. Jadi `"Budi"` adalah data text yang sudah ada selama program berjalan.
+
+Kalau ditulis eksplisit:
+
+```rust
+let name: &str = "Budi";
+```
+
+`&str` tidak memiliki data. Ia hanya melihat data string yang sudah ada.
+
+Bayangkan `&str` sebagai view ke text. Ia tahu:
+
+- mulai dari mana text dilihat
+- panjang text yang dilihat
+
+Tapi `&str` bukan owner.
+
+## Kenapa Rust Tidak Cukup Pakai `String` Saja?
+
+Karena tidak semua code perlu memiliki data.
+
+Misalnya function hanya ingin mencetak nama:
+
+```rust
+fn greet(name: String) {
+    println!("Halo, {}", name);
+}
+
+fn main() {
+    let name = String::from("Budi");
+
+    greet(name);
+
+    // println!("{}", name); // error
+}
+```
+
+Function `greet` menerima `String`, berarti ownership string pindah ke function tersebut. Setelah `greet(name)` dipanggil, variable `name` di `main` tidak bisa dipakai lagi.
+
+Padahal function `greet` hanya butuh membaca text. Ia tidak perlu mengambil ownership.
+
+Solusi yang lebih baik:
+
+```rust
+fn greet(name: &str) {
+    println!("Halo, {}", name);
+}
+
+fn main() {
+    let name = String::from("Budi");
+
+    greet(&name);
+
+    println!("{}", name);
+}
+```
+
+Dengan `&str`, function hanya meminjam text. Ownership tetap di `main`.
+
+Inilah alasan besar kenapa Rust sering memakai `&`.
+
+## Tanda `&` Artinya Meminjam
+
+Tanda `&` membuat reference.
+
+```rust
+let name = String::from("Budi");
+let reference = &name;
+```
+
+`reference` tidak memiliki string. Ia hanya meminjam `name`.
+
+Contoh function:
+
+```rust
+fn print_name(name: &String) {
+    println!("{}", name);
+}
+
+fn main() {
+    let name = String::from("Budi");
+
+    print_name(&name);
+
+    println!("{}", name);
+}
+```
+
+Bagian ini penting:
+
+```rust
+print_name(&name);
+```
+
+Artinya: "kirim reference ke `name`, jangan pindahkan ownership `name`."
+
+Kalau tanpa `&`:
+
+```rust
+fn print_name(name: String) {
+    println!("{}", name);
+}
+
+fn main() {
+    let name = String::from("Budi");
+
+    print_name(name);
+
+    // println!("{}", name); // error
+}
+```
+
+Ownership pindah ke parameter function. Setelah itu, `name` tidak bisa dipakai lagi di `main`.
+
+## Kenapa Parameter Lebih Sering `&str` Daripada `&String`?
+
+Ini pertanyaan penting.
+
+Kita bisa menulis:
+
+```rust
+fn greet(name: &String) {
+    println!("Halo, {}", name);
+}
+```
+
+Tapi biasanya lebih idiomatis:
+
+```rust
+fn greet(name: &str) {
+    println!("Halo, {}", name);
+}
+```
+
+Kenapa?
+
+Karena `&str` lebih fleksibel.
+
+```rust
+fn greet(name: &str) {
+    println!("Halo, {}", name);
+}
+
+fn main() {
+    let owned = String::from("Budi");
+    let literal = "Ayu";
+
+    greet(&owned);
+    greet(literal);
+    greet("Citra");
+}
+```
+
+Function `greet` bisa menerima:
+
+- string literal
+- reference ke `String`
+- string slice lain
+
+Kalau parameter memakai `&String`, function lebih sempit karena hanya menerima reference ke `String`.
+
+```rust
+fn greet(name: &String) {
+    println!("Halo, {}", name);
+}
+
+fn main() {
+    let literal = "Ayu";
+
+    // greet(literal); // error
+}
+```
+
+Jadi aturan praktisnya:
+
+- gunakan `&str` untuk parameter function yang hanya membaca text
+- gunakan `String` kalau function perlu memiliki text tersebut
+- jarang perlu memakai `&String` sebagai parameter publik
+
+## `&String` Bisa Menjadi `&str`
+
+Rust punya fitur deref coercion. Dalam banyak situasi, `&String` bisa otomatis diperlakukan sebagai `&str`.
+
+```rust
+fn count_chars(text: &str) -> usize {
+    text.chars().count()
+}
+
+fn main() {
+    let message = String::from("Halo");
+
+    let total = count_chars(&message);
+
+    println!("{}", total);
+}
+```
+
+`&message` sebenarnya bertipe `&String`, tapi compiler bisa mengubahnya menjadi `&str` karena `String` bisa deref ke `str`.
+
+Itulah kenapa `fn name(text: &str)` sering menjadi pilihan yang enak.
+
+## Move: Saat `String` Dikirim Tanpa `&`
+
+Sekarang lihat contoh ini:
+
+```rust
+fn consume(text: String) {
+    println!("{}", text);
+}
+
+fn main() {
+    let message = String::from("Rust");
+
+    consume(message);
+
+    // println!("{}", message); // error
+}
+```
+
+`String` bukan type `Copy`. Saat dikirim ke function tanpa `&`, ownership pindah.
+
+Kenapa `String` tidak otomatis di-copy?
+
+Karena `String` bisa berisi data heap yang panjang. Kalau Rust otomatis menyalin isi heap setiap assignment atau pemanggilan function, biaya performanya bisa tidak terlihat dan mahal.
+
+Rust memilih move sebagai default untuk type non-`Copy`.
+
+Kalau memang ingin salinan baru, tulis eksplisit:
+
+```rust
+fn main() {
+    let a = String::from("Rust");
+    let b = a.clone();
+
+    println!("{}", a);
+    println!("{}", b);
+}
+```
+
+`clone()` membuat salinan data. Karena mahal atau murahnya tergantung type, Rust membuat operasi ini terlihat jelas.
+
+## Borrowing: Meminjam Tanpa Memindahkan
+
+Borrowing berarti function memakai value tanpa mengambil ownership.
+
+```rust
+fn length(text: &str) -> usize {
+    text.len()
+}
+
+fn main() {
+    let message = String::from("Belajar Rust");
+
+    let total = length(&message);
+
+    println!("{}", total);
+    println!("{}", message);
+}
+```
+
+Function `length` hanya butuh membaca text. Jadi parameter `&str` sudah cukup.
+
+Ini membuat caller tetap bisa memakai `message` setelah function selesai.
+
+## Mutable String dan `&mut`
+
+Kalau function perlu mengubah `String` tanpa mengambil ownership, gunakan mutable reference.
+
+```rust
+fn add_exclamation(text: &mut String) {
+    text.push('!');
+}
+
+fn main() {
+    let mut message = String::from("Halo");
+
+    add_exclamation(&mut message);
+
+    println!("{}", message);
+}
+```
+
+Ada dua hal yang harus cocok:
+
+```rust
+let mut message = String::from("Halo");
+add_exclamation(&mut message);
+```
+
+Variable harus `mut`, dan saat meminjam harus memakai `&mut`.
+
+Rust membatasi mutable reference:
+
+- dalam satu waktu hanya boleh ada satu mutable reference
+- tidak boleh ada immutable reference aktif bersamaan dengan mutable reference
+
+Contoh yang tidak boleh:
+
+```rust
+fn main() {
+    let mut message = String::from("Halo");
+
+    let a = &message;
+    let b = &mut message;
+
+    println!("{} {}", a, b);
+}
+```
+
+Kenapa dilarang? Karena kalau ada yang membaca dan ada yang mengubah data yang sama pada waktu bersamaan, bug bisa muncul. Rust mencegah ini saat compile time.
+
+## Slice: Melihat Sebagian String
+
+`&str` juga bisa menjadi slice dari sebagian `String`.
+
+```rust
+fn main() {
+    let message = String::from("Halo Rust");
+    let part = &message[0..4];
+
+    println!("{}", part);
+}
+```
+
+`part` bertipe `&str`. Ia hanya melihat sebagian isi `message`.
+
+Tapi hati-hati: string Rust adalah UTF-8. Index string harus berada di boundary karakter yang valid.
+
+Contoh berbahaya:
+
+```rust
+fn main() {
+    let text = String::from("éclair");
+
+    // let broken = &text[0..1]; // bisa panic
+}
+```
+
+Karakter `é` tidak selalu 1 byte. Karena itu slicing string dengan range byte harus hati-hati.
+
+Kalau ingin iterasi karakter, pakai `.chars()`.
+
+```rust
+fn main() {
+    let text = String::from("éclair");
+
+    for ch in text.chars() {
+        println!("{}", ch);
+    }
+}
+```
+
+Kalau ingin iterasi byte, pakai `.bytes()`.
+
+```rust
+fn main() {
+    let text = String::from("Rust");
+
+    for byte in text.bytes() {
+        println!("{}", byte);
+    }
+}
+```
+
+## `len()` Menghitung Byte, Bukan Karakter
+
+Ini sering jadi jebakan.
+
+```rust
+fn main() {
+    let a = "Rust";
+    let b = "é";
+
+    println!("{}", a.len());
+    println!("{}", b.len());
+}
+```
+
+`"Rust".len()` menghasilkan 4 karena ada 4 byte.
+
+Tapi `"é".len()` bisa menghasilkan 2 karena karakter itu disimpan sebagai 2 byte dalam UTF-8.
+
+Kalau ingin menghitung karakter Unicode scalar value:
+
+```rust
+fn main() {
+    let text = "é";
+
+    println!("{}", text.chars().count());
+}
+```
+
+Jadi:
+
+- `.len()` untuk jumlah byte
+- `.chars().count()` untuk jumlah Unicode scalar value
+
+Untuk user-facing text yang kompleks, seperti emoji gabungan atau aksen tertentu, penghitungan "karakter yang terlihat oleh user" bisa lebih rumit dan biasanya butuh crate khusus.
+
+## Membuat `String`
+
+Ada beberapa cara umum membuat `String`.
+
+```rust
+fn main() {
+    let a = String::new();
+    let b = String::from("Rust");
+    let c = "Rust".to_string();
+    let d = "Rust".to_owned();
+
+    println!("{} {} {} {}", a, b, c, d);
+}
+```
+
+`String::new()` membuat string kosong.
+
+`String::from("Rust")`, `"Rust".to_string()`, dan `"Rust".to_owned()` sama-sama sering dipakai untuk membuat owned string dari string slice.
+
+## Menggabungkan String
+
+Rust punya beberapa cara menggabungkan string.
+
+Dengan `push_str`:
+
+```rust
+fn main() {
+    let mut message = String::from("Halo");
+
+    message.push_str(" Rust");
+
+    println!("{}", message);
+}
+```
+
+Dengan `push` untuk satu `char`:
+
+```rust
+fn main() {
+    let mut message = String::from("Halo");
+
+    message.push('!');
+
+    println!("{}", message);
+}
+```
+
+Dengan `format!`:
+
+```rust
+fn main() {
+    let name = "Budi";
+    let message = format!("Halo, {}", name);
+
+    println!("{}", message);
+}
+```
+
+Untuk banyak kasus, `format!` lebih enak dibaca.
+
+Ada juga operator `+`, tapi aturannya sering membuat pemula bingung.
+
+```rust
+fn main() {
+    let a = String::from("Halo ");
+    let b = String::from("Rust");
+
+    let c = a + &b;
+
+    println!("{}", c);
+    println!("{}", b);
+    // println!("{}", a); // error
+}
+```
+
+Kenapa `a` tidak bisa dipakai lagi?
+
+Karena operator `+` untuk `String` mengambil ownership operand kiri. Operand kanan dipinjam sebagai `&str`.
+
+Secara konsep, ini mirip:
+
+```rust
+fn add(self, other: &str) -> String
+```
+
+Jadi `a` dipindahkan, `b` hanya dipinjam.
+
+Kalau tidak ingin memindahkan `a`, pakai `format!`.
+
+```rust
+fn main() {
+    let a = String::from("Halo ");
+    let b = String::from("Rust");
+
+    let c = format!("{}{}", a, b);
+
+    println!("{}", a);
+    println!("{}", b);
+    println!("{}", c);
+}
+```
+
+## Kapan Pakai `String`, `&str`, `&String`, dan `&mut String`?
+
+Gunakan `String` saat kamu perlu memiliki text.
+
+```rust
+struct User {
+    name: String,
+}
+```
+
+Struct biasanya menyimpan `String`, bukan `&str`, karena struct perlu memiliki data tersebut.
+
+Gunakan `&str` saat function hanya membaca text.
+
+```rust
+fn slugify(title: &str) -> String {
+    title.to_lowercase().replace(" ", "-")
+}
+```
+
+Gunakan `&mut String` saat function perlu mengubah string milik caller.
+
+```rust
+fn normalize(text: &mut String) {
+    *text = text.trim().to_lowercase();
+}
+```
+
+`&String` jarang diperlukan. Biasanya ganti dengan `&str`.
+
+```rust
+// Kurang fleksibel
+fn print_a(text: &String) {
+    println!("{}", text);
+}
+
+// Lebih fleksibel
+fn print_b(text: &str) {
+    println!("{}", text);
+}
+```
+
+## Kenapa Struct Biasanya Pakai `String`, Bukan `&str`?
+
+Misalnya kamu membuat struct:
+
+```rust
+struct User {
+    name: String,
+}
+```
+
+Ini berarti `User` memiliki `name`.
+
+Kalau memakai `&str`, struct hanya meminjam string dari tempat lain.
+
+```rust
+struct User<'a> {
+    name: &'a str,
+}
+```
+
+Kode ini valid, tapi sekarang ada lifetime `'a`. Artinya `User` tidak boleh hidup lebih lama daripada string yang dipinjamnya.
+
+Untuk pemula, ini sering membuat code jadi lebih rumit.
+
+Kalau data memang bagian dari entity, pakai `String`.
+
+Kalau hanya parameter sementara di function, pakai `&str`.
+
+## Lifetime Singkatnya
+
+Reference harus selalu menunjuk ke data yang masih hidup.
+
+Rust tidak membiarkan dangling reference.
+
+Contoh yang tidak boleh:
+
+```rust
+fn get_name() -> &str {
+    let name = String::from("Budi");
+
+    &name
+}
+```
+
+Kenapa error?
+
+Karena `name` dibuat di dalam function. Saat function selesai, `name` dihancurkan. Kalau function mengembalikan `&name`, reference itu akan menunjuk ke data yang sudah tidak ada.
+
+Solusinya: kembalikan owned value.
+
+```rust
+fn get_name() -> String {
+    let name = String::from("Budi");
+
+    name
+}
+```
+
+Atau kembalikan string literal jika datanya memang statis.
+
+```rust
+fn app_name() -> &'static str {
+    "Code Tutor"
+}
+```
+
+## Kesalahan yang Sering Muncul
+
+## 1. Mengirim `String` ke Function Padahal Cuma Dibaca
+
+Kurang ideal:
+
+```rust
+fn print_message(message: String) {
+    println!("{}", message);
+}
+```
+
+Lebih baik:
+
+```rust
+fn print_message(message: &str) {
+    println!("{}", message);
+}
+```
+
+Caller bisa tetap memakai string setelah function dipanggil.
+
+## 2. Terlalu Sering Memakai `clone()`
+
+Kadang pemula memakai `clone()` agar error ownership hilang.
+
+```rust
+fn main() {
+    let message = String::from("Halo");
+
+    print_message(message.clone());
+    println!("{}", message);
+}
+```
+
+Ini bisa jalan, tapi belum tentu perlu.
+
+Kalau function cuma membaca, ubah parameter menjadi reference.
+
+```rust
+fn print_message(message: &str) {
+    println!("{}", message);
+}
+```
+
+Lalu panggil:
+
+```rust
+print_message(&message);
+```
+
+`clone()` sebaiknya dipakai saat kamu memang butuh data baru yang terpisah.
+
+## 3. Bingung Kenapa `String` Tidak Bisa Di-index Langsung
+
+Di Rust, ini tidak boleh:
+
+```rust
+fn main() {
+    let text = String::from("Rust");
+
+    // let first = text[0]; // error
+}
+```
+
+Rust tidak mengizinkan indexing string langsung karena string disimpan sebagai UTF-8. Satu karakter bisa memakai lebih dari satu byte.
+
+Gunakan `.chars()` kalau ingin karakter.
+
+```rust
+fn main() {
+    let text = String::from("Rust");
+    let first = text.chars().next();
+
+    println!("{:?}", first);
+}
+```
+
+Hasilnya `Option<char>` karena string bisa saja kosong.
+
+## 4. Memakai `&String` di Semua Tempat
+
+Kalau function hanya membaca text, biasakan:
+
+```rust
+fn read(text: &str) {
+    println!("{}", text);
+}
+```
+
+Bukan:
+
+```rust
+fn read(text: &String) {
+    println!("{}", text);
+}
+```
+
+`&str` membuat API lebih fleksibel dan idiomatis.
+
+## Pertanyaan Interview Tentang String di Rust
+
+## 1. Apa bedanya `String` dan `&str`?
+
+`String` adalah owned string yang memiliki data dan bisa berubah ukuran. `&str` adalah borrowed string slice yang hanya meminjam atau melihat text.
+
+## 2. Kenapa function sering menerima `&str`?
+
+Karena `&str` fleksibel dan tidak mengambil ownership. Function bisa menerima string literal, slice, atau reference ke `String`.
+
+## 3. Apa arti tanda `&`?
+
+`&` membuat reference. Reference berarti meminjam value tanpa memindahkan ownership.
+
+## 4. Apa yang terjadi kalau `String` dikirim ke function tanpa `&`?
+
+Ownership berpindah ke function. Setelah itu, variable asal tidak bisa dipakai lagi, kecuali value dikembalikan atau sebelumnya di-clone.
+
+## 5. Kapan memakai `clone()`?
+
+Pakai `clone()` kalau benar-benar butuh salinan data baru. Jangan pakai `clone()` hanya untuk menghindari memahami ownership. Kalau function cuma membaca, pakai reference.
+
+## 6. Kenapa `String` tidak bisa di-index seperti array?
+
+Karena `String` memakai UTF-8. Satu karakter bisa terdiri dari beberapa byte, jadi index byte tidak selalu sama dengan index karakter.
+
+## 7. Apa bedanya `.len()` dan `.chars().count()`?
+
+`.len()` menghitung byte. `.chars().count()` menghitung Unicode scalar value.
+
+## 8. Kenapa `String` biasanya dipakai di struct?
+
+Karena struct biasanya perlu memiliki data. Kalau struct menyimpan `&str`, berarti struct meminjam data dari tempat lain dan perlu lifetime.
+
+## 9. Apa bedanya `push_str` dan `push`?
+
+`push_str` menambahkan string slice.
+
+```rust
+message.push_str(" Rust");
+```
+
+`push` menambahkan satu `char`.
+
+```rust
+message.push('!');
+```
+
+## 10. Kenapa `a + &b` membuat `a` tidak bisa dipakai lagi?
+
+Karena operator `+` pada `String` mengambil ownership operand kiri dan meminjam operand kanan. Jadi `a` dipindahkan, sedangkan `b` masih bisa dipakai.
+
+## Ringkasan
+
+Kalau disederhanakan:
+
+- `String` berarti memiliki text
+- `&str` berarti meminjam atau melihat text
+- `&` berarti membuat reference
+- `&mut String` berarti meminjam string secara mutable
+- `clone()` berarti membuat salinan data baru
+
+Aturan praktis yang aman:
+
+- function yang hanya membaca text: pakai `&str`
+- struct yang menyimpan text: pakai `String`
+- function yang mengubah text milik caller: pakai `&mut String`
+- hindari `&String` kecuali ada alasan spesifik
+
+String di Rust terasa detail karena Rust memaksa ownership dan borrowing terlihat jelas. Setelah konsep ini masuk, banyak error compiler yang awalnya terlihat menyebalkan mulai terasa seperti petunjuk tentang siapa yang memiliki data dan siapa yang hanya meminjam.
