@@ -10,6 +10,7 @@ export type ContentMeta = {
   description: string;
   slug: string;
   category?: string;
+  section?: string;
   order?: number;
   readingTime?: string;
   updatedAt?: string;
